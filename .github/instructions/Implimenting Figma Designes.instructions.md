@@ -9,10 +9,6 @@ These instructions define how to translate Figma screens into code for the grads
 
 ## Workflow: When User Provides a Figma Link
 
-1. **Extract the node ID** from the URL (`node-id=X-Y` → `X:Y`)
-2. **Call `get_design_context`** with `nodeId`, `clientFrameworks: "react,next"`, `clientLanguages: "typescript,css"`, and the appropriate `artifactType` (usually `WEB_PAGE_OR_APP_SCREEN`)
-3. **Call `get_screenshot`** with the same `nodeId` to see the visual reference
-4. **If the design is complex**, call `get_metadata` first to understand the node tree, then call `get_design_context` on individual child nodes
 
 ## Component Strategy
 
@@ -21,7 +17,7 @@ These instructions define how to translate Figma screens into code for the grads
   - If the component **already exists**, reuse it. If the Figma design shows a variant not yet supported (new size, color, state), **extend the existing component** with additional props — do NOT create a duplicate
   - Every UI component must accept a `className` prop for composition
 - **Feature components** (`src/components/[feature]/`): Composed components specific to a feature (e.g., `StudentCard`, `ProjectTable`, `GradeChart`). These combine UI primitives with domain-specific layout.
-- **Pages** (`src/app/(...)/[route]/page.tsx`): Assemble feature components and call the API layer for data.
+- **Pages** (`src/app/[role]/[route]/page.tsx`): Assemble feature components and call the API layer for data.
 
 ### Component Modularity Rules
 
@@ -97,7 +93,7 @@ export default function StudentList({ students }: StudentListProps) {
   return ( /* Tailwind UI matching Figma */ );
 }
 
-// 5. src/app/(admin)/students/page.tsx
+// 5. src/app/admin/students/page.tsx
 import { getStudents } from "@/lib/api/students";
 import StudentList from "@/components/students/student-list";
 export default async function StudentsPage() {

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createStudentSchema } from "@/lib/validations/student";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const students = await prisma.user.findMany({
     where: { role: "STUDENT" },

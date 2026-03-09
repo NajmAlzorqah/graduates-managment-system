@@ -41,16 +41,27 @@ prisma/
 docker-compose.yml           # PostgreSQL service
 src/
   app/
-    (student)/               # Student role routes
-    (admin)/                  # Admin role routes
-    (staff)/                  # Staff role routes
-    (auth)/                   # Login/register routes
+    layout.tsx               # Root layout (fonts, html/body)
+    page.tsx                  # Root redirect (→ /login or role-based)
+    globals.css               # Tailwind + design tokens
+    (auth)/                   # Route group — auth pages share centered layout, no nav
+      layout.tsx              # Centered auth layout
+      login/page.tsx          # /login
+      register/page.tsx       # /register
+    admin/                    # Real route segment → /admin/...
+      layout.tsx              # Admin shell (sidebar, topbar)
+      page.tsx                # /admin (admin dashboard)
+      students/page.tsx       # /admin/students
+    staff/                    # Real route segment → /staff/...
+      layout.tsx              # Staff shell (sidebar, topbar)
+      page.tsx                # /staff (staff dashboard)
+    student/                  # Real route segment → /student/...
+      layout.tsx              # Student shell (sidebar, topbar)
+      page.tsx                # /student (student dashboard)
     api/                      # REST API route handlers
       auth/[...nextauth]/     # Auth.js handler
       students/               # /api/students
       ...
-    globals.css               # Tailwind + design tokens
-    layout.tsx                # Root layout
   components/
     ui/                       # Primitive components (Button, Input, Dialog, etc.)
     [feature]/                # Feature-specific composed components
@@ -62,6 +73,14 @@ src/
     mock/                     # Mock data for each domain
   types/                      # Shared TypeScript types
 ```
+
+### Route Architecture
+
+- **`(auth)/`** is a **route group** (parentheses) — it shares a centered layout without adding a URL segment. `/login` and `/register` live here.
+- **`admin/`**, **`staff/`**, **`student/`** are **real route segments** — each creates a URL prefix (`/admin/...`, `/staff/...`, `/student/...`) so role-based pages never collide.
+- Each role's `page.tsx` serves as that role's **dashboard** (e.g., `/admin` is the admin dashboard). No need for a nested `/admin/dashboard` route.
+- Role-specific sub-pages go under their segment: `/admin/students`, `/staff/projects`, `/student/project`, etc.
+- **Middleware** (when added) protects routes by prefix — e.g., only `ADMIN` users can access `/admin/*`.
 
 ## Coding Conventions
 
@@ -108,9 +127,9 @@ export async function getStudents(): Promise<Student[]> {
 Pages consume this via Server Components:
 
 ```tsx
-// src/app/(admin)/students/page.tsx
+// src/app/admin/students/page.tsx
 import { getStudents } from "@/lib/api/students";
-import { StudentList } from "@/components/students/student-list";
+import StudentList from "@/components/students/student-list";
 
 export default async function StudentsPage() {
   const students = await getStudents();
