@@ -1,10 +1,24 @@
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 
-export default function HomePage() {
-  // TODO: When auth is wired, read session and redirect based on role:
-  // - ADMIN  → /admin
-  // - STAFF  → /staff
-  // - STUDENT → /student
-  // For now, redirect unauthenticated users to login
-  redirect("/login");
+export default async function HomePage() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  switch (session.user.role) {
+    case "ADMIN":
+      redirect("/admin");
+      break;
+    case "STAFF":
+      redirect("/staff");
+      break;
+    case "STUDENT":
+      redirect("/student");
+      break;
+    default:
+      redirect("/login");
+  }
 }
