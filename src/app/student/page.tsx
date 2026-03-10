@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import CertificateStatusCard from "@/components/student/certificate-status-card";
 import DocumentsStatusCard from "@/components/student/documents-status-card";
 import { getStudentHomeData } from "@/lib/api/student-home";
+import { auth } from "@/lib/auth";
 
 function UserAvatarIcon({ className = "" }: { className?: string }) {
   return (
@@ -16,7 +18,12 @@ function UserAvatarIcon({ className = "" }: { className?: string }) {
 }
 
 export default async function StudentHomePage() {
-  const { profile, certificateSteps, documents } = await getStudentHomeData();
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const { profile, certificateSteps, documents } = await getStudentHomeData(
+    session.user.id,
+  );
 
   return (
     <div className="flex flex-col gap-5 pb-6">
