@@ -1,3 +1,4 @@
+import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createStudentSchema } from "@/lib/validations/student";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const students = await prisma.user.findMany({
     where: { role: "STUDENT" },
+    include: { studentProfile: true },
   });
   return NextResponse.json(students);
 }
@@ -22,12 +24,22 @@ export async function POST(request: Request) {
     );
   }
 
+  const passwordHash = await hash(parsed.data.password, 12);
+
   const student = await prisma.user.create({
     data: {
       name: parsed.data.name,
       email: parsed.data.email,
+      academicId: parsed.data.academicId,
+      passwordHash,
       role: "STUDENT",
+      studentProfile: {
+        create: {
+          major: parsed.data.department,
+        },
+      },
     },
+    include: { studentProfile: true },
   });
 
   return NextResponse.json(student, { status: 201 });

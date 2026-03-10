@@ -5,10 +5,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
-  // TODO: When connecting to the database, pass a driver adapter:
-  // import { PrismaPg } from "@prisma/adapter-pg";
-  // return new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
-  return new PrismaClient({} as never);
+  return new PrismaClient();
 }
 
 // Lazy-initialized — the client is only created when first accessed at runtime,
