@@ -1,7 +1,9 @@
 "use server";
 
+import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { signIn } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
 
 export type LoginActionState = {
@@ -23,12 +25,26 @@ export async function loginAction(
     return { error: first ?? "Invalid input" };
   }
 
+  // Pre-check: distinguish "not approved" from "bad credentials"
+  const existing = await prisma.user.findUnique({
+    where: { academicId: parsed.data.academicId },
+    select: { isApproved: true, passwordHash: true },
+  });
+
+  if (existing) {
+    const passwordValid = await bcrypt.compare(
+      parsed.data.password,
+      existing.passwordHash,
+    );
+    if (passwordValid && !existing.isApproved) {
+      return { error: "Your account is pending approval by an administrator." };
+    }
+  }
+
   try {
     await signIn("credentials", {
       academicId: parsed.data.academicId,
       password: parsed.data.password,
-      // redirectTo is handled by the auth config (pages.signIn) and the
-      // root page.tsx which reads the session and redirects by role.
       redirect: true,
       redirectTo: "/",
     });
@@ -84,15 +100,57 @@ export async function registerAction(
     return { fieldErrors };
   }
 
-  // TODO: swap mock for real Prisma call:
-  // const existing = await prisma.user.findFirst({
-  //   where: { OR: [{ email: parsed.data.email }, { academicId: parsed.data.academicId }] },
-  // });
-  // if (existing) return { error: "An account with this email or academic ID already exists." };
-  // const passwordHash = await bcrypt.hash(parsed.data.password, 12);
-  // await prisma.user.create({
-  //   data: { name: parsed.data.name, email: parsed.data.email, academicId: parsed.data.academicId, passwordHash },
-  // });
+  const existing = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: parsed.data.email },
+        { academicId: parsed.data.academicId },
+      ],
+    },
+  });
+  if (existing) {
+    return {
+      error: "An account with this email or academic ID already exists.",
+    };
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.password, 12);
+
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name: parsed.data.name,
+        email: parsed.data.email,
+        academicId: parsed.data.academicId,
+        passwordHash,
+        role: "STUDENT",
+        isApproved: false,
+      },
+    });
+
+    await tx.studentProfile.create({
+      data: {
+        userId: user.id,
+        major: "",
+      },
+    });
+
+    const defaultSteps = [
+      { label: "Fill graduation form", order: 1 },
+      { label: "Verify data", order: 2 },
+      { label: "Send to higher education", order: 3 },
+      { label: "Authenticate certificate", order: 4 },
+    ];
+
+    await tx.certificateStep.createMany({
+      data: defaultSteps.map((step) => ({
+        userId: user.id,
+        label: step.label,
+        order: step.order,
+        status: "PENDING" as const,
+      })),
+    });
+  });
 
   return { success: true };
 }

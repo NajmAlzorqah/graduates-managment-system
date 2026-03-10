@@ -32,10 +32,13 @@ export async function POST(request: Request) {
       email: parsed.data.email,
       academicId: parsed.data.academicId,
       passwordHash,
+      nameAr: parsed.data.nameAr,
       role: "STUDENT",
       studentProfile: {
         create: {
-          major: parsed.data.department,
+          major: parsed.data.major,
+          studentCardNumber: parsed.data.studentCardNumber,
+          graduationYear: parsed.data.graduationYear,
         },
       },
     },

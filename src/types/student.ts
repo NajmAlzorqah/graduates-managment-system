@@ -2,8 +2,25 @@ export type Student = {
   id: string;
   name: string;
   email: string;
+  academicId: string;
   department: string;
   status: "active" | "graduated" | "suspended";
+};
+
+export type StudentWithProfile = {
+  id: string;
+  name: string | null;
+  email: string;
+  academicId: string;
+  nameAr: string | null;
+  isApproved: boolean;
+  role: "STUDENT";
+  createdAt: Date;
+  profile: {
+    studentCardNumber: string | null;
+    major: string | null;
+    graduationYear: number | null;
+  } | null;
 };
 
 export type CertificateStep = {
