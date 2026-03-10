@@ -1,4 +1,4 @@
-import LogoutButton from "@/components/ui/logout-button";
+import StudentBottomNav from "@/components/student/student-bottom-nav";
 
 export default function StudentLayout({
   children,
@@ -6,16 +6,13 @@ export default function StudentLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Top bar */}
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-        <span className="text-sm font-semibold text-[#1a3b5c] dark:text-white">
-          Student Portal
-        </span>
-        <LogoutButton />
-      </header>
-      {/* TODO: Add student sidebar from Figma design */}
-      <main className="flex-1">{children}</main>
+    <div className="min-h-screen bg-[#1a3b5c]">
+      {/* Constrain to mobile-like width; centers on desktop */}
+      <div className="max-w-[430px] mx-auto min-h-screen flex flex-col pb-[78px]">
+        <main className="flex-1">{children}</main>
+      </div>
+      {/* Fixed bottom navigation */}
+      <StudentBottomNav />
     </div>
   );
 }
