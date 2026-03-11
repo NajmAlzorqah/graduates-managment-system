@@ -77,3 +77,15 @@ export async function markAllAsRead(userId: string): Promise<void> {
     data: { isRead: true },
   });
 }
+
+export async function getSystemNotificationStats(): Promise<{
+  unreadCount: number;
+  totalCount: number;
+}> {
+  const [unreadCount, totalCount] = await Promise.all([
+    prisma.notification.count({ where: { isRead: false } }),
+    prisma.notification.count(),
+  ]);
+
+  return { unreadCount, totalCount };
+}
