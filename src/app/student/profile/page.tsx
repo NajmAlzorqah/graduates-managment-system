@@ -1,16 +1,22 @@
-import LogoutButton from "@/components/ui/logout-button";
+import { redirect } from "next/navigation";
+import ProfileContent from "@/components/student/profile-content";
+import { getStudentById } from "@/lib/api/students";
+import { auth } from "@/lib/auth";
 
-export default function StudentProfilePage() {
+export default async function StudentProfilePage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const student = await getStudentById(session.user.id);
+  if (!student) redirect("/login");
+
   return (
-    <div
-      className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-5"
-      dir="rtl"
-    >
-      <p className="text-white font-semibold text-lg font-arabic">
-        الملف الشخصي
-      </p>
-      <p className="text-white/50 text-sm font-arabic">قريباً</p>
-      <LogoutButton />
-    </div>
+    <ProfileContent
+      nameAr={student.nameAr ?? student.name ?? ""}
+      major={student.profile?.major ?? ""}
+      email={student.email}
+      academicId={student.academicId}
+      studentCardNumber={student.profile?.studentCardNumber ?? ""}
+    />
   );
 }

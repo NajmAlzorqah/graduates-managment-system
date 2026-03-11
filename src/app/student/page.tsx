@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import CertificateStatusCard from "@/components/student/certificate-status-card";
 import DocumentsStatusCard from "@/components/student/documents-status-card";
+import FirstLoginScreen from "@/components/student/first-login-screen";
+import { getGraduationForm } from "@/lib/api/graduation-forms";
 import { getStudentHomeData } from "@/lib/api/student-home";
 import { auth } from "@/lib/auth";
 
@@ -21,9 +23,22 @@ export default async function StudentHomePage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const form = await getGraduationForm(session.user.id);
+
   const { profile, certificateSteps, documents } = await getStudentHomeData(
     session.user.id,
   );
+
+  if (!form || form.status === "DRAFT") {
+    // Show the first login screen for students needing to submit their form
+    return (
+      <FirstLoginScreen
+        userId={session.user.id}
+        name={profile.nameAr || "طالب"}
+        department={profile.department || ""}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5 pb-6">

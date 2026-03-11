@@ -96,9 +96,9 @@ export default function StudentBottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50"
       aria-label="Student navigation"
     >
-      <div className="max-w-[430px] mx-auto">
-        <div className="bg-white rounded-t-[30px] shadow-[0_-4px_30px_rgba(0,0,0,0.12)]">
-          <div className="flex items-end px-4 pb-5 h-[78px]">
+      <div className="mx-auto max-w-[430px]">
+        <div className="rounded-t-[34px] bg-[#f7f7f7] shadow-[0_-6px_34px_rgba(0,0,0,0.12)]">
+          <div className="flex h-[84px] items-end px-4 pb-4">
             {navItems.map((item) => {
               const isActive =
                 item.href === "/student"
@@ -115,21 +115,21 @@ export default function StudentBottomNav() {
                 >
                   <div
                     className={[
-                      "flex items-center justify-center rounded-full",
-                      "transition-all duration-300 ease-in-out",
+                      "z-10 flex items-center justify-center rounded-full",
+                      "transition-all duration-500 ease-[cubic-bezier(0.2,0.9,0.2,1)]",
                       isActive
-                        ? "w-14 h-14 bg-[#ffb755] shadow-[0_6px_16px_rgba(255,183,85,0.55)] -translate-y-7"
-                        : "w-9 h-9 translate-y-0",
+                        ? "h-[62px] w-[62px] -translate-y-7 bg-[#f4b24d] shadow-[0_10px_20px_rgba(0,0,0,0.2)] ring-[5px] ring-[#1a3b5c]"
+                        : "h-10 w-10 translate-y-2 bg-transparent opacity-60 hover:opacity-100",
                     ].join(" ")}
                   >
                     <NavIcon icon={item.icon} active={isActive} />
                   </div>
                   <span
                     className={[
-                      "text-[11px] leading-none transition-colors duration-300",
+                      "absolute text-[12px] font-medium transition-all duration-300",
                       isActive
-                        ? "text-[#1a3b5c] font-medium"
-                        : "text-[#1a3b5c]/50 font-light",
+                        ? "bottom-[-18px] font-bold text-[#1a3b5c] opacity-100"
+                        : "bottom-[4px] font-semibold text-[#1a3b5c] opacity-60",
                     ].join(" ")}
                   >
                     {item.label}

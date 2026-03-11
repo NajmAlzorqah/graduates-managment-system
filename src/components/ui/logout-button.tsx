@@ -21,7 +21,8 @@ export default function LogoutButton({ className = "" }: LogoutButtonProps) {
       type="button"
       onClick={handleLogout}
       disabled={isPending}
-      className={`flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-500/20 disabled:opacity-60 dark:text-red-400 ${className}`}
+      className={`inline-flex h-10 items-center gap-2 rounded-xl border border-white/20 bg-[#1a3b5c] px-3.5 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(0,0,0,0.22)] transition-all duration-200 hover:bg-[#14314d] disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      aria-label="Logout"
     >
       {/* Logout icon */}
       <svg
@@ -56,7 +57,7 @@ export default function LogoutButton({ className = "" }: LogoutButtonProps) {
           strokeLinecap="round"
         />
       </svg>
-      {isPending ? "Logging out…" : "Logout"}
+      {isPending ? "Logging out..." : "Logout"}
     </button>
   );
 }
