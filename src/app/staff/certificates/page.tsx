@@ -4,7 +4,9 @@ import { getStudentsWithCertSteps } from "@/lib/api/students";
 
 export default async function StaffCertificatesPage() {
   const students = await getStudentsWithCertSteps();
-  const majors = [...new Set(students.map((s) => s.major).filter(Boolean))] as string[];
+  const majors = [
+    ...new Set(students.map((s) => s.major).filter(Boolean)),
+  ] as string[];
 
   return (
     <StaffSectionShell

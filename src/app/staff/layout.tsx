@@ -27,12 +27,14 @@ export default async function StaffLayout({
   const staffName = session.user.name ?? "عضو الفريق";
 
   return (
-    <div className="flex min-h-screen bg-[#1a3b5c]">
+    <div className="flex h-screen bg-[#1a3b5c]">
       {/* White sidebar — desktop only (lg+) */}
-      <StaffNav staffName={staffName} staffDepartment="شؤون الخريجين" />
+      <div className="hidden lg:block lg:shrink-0">
+        <StaffNav staffName={staffName} staffDepartment="شؤون الخريجين" />
+      </div>
 
       {/* Right-side content column */}
-      <div className="flex min-h-screen flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top header bar (dark blue) */}
         <header className="flex items-center justify-between gap-4 px-4 py-5 md:px-8 md:py-7 xl:px-10 xl:py-9">
           {/* Spacer to push title to center */}

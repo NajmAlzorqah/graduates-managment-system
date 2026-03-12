@@ -1,34 +1,51 @@
-import StaffSectionShell from "@/components/staff/staff-section-shell";
+import StaffReportsTable, {
+  type StaffReportRow,
+} from "@/components/staff/staff-reports-table";
+import {
+  getStudentsBasicInfo,
+  getStudentsWithCertSteps,
+} from "@/lib/api/students";
 import { getStudents } from "@/lib/api/students";
 
 export default async function StaffReportsPage() {
-  const students = await getStudents();
-  const activeStudents = students.filter(
-    (student) => student.status === "active",
-  ).length;
+  const [students, studentsBasicInfo, studentsWithSteps] = await Promise.all([
+    getStudents(),
+    getStudentsBasicInfo(),
+    getStudentsWithCertSteps(),
+  ]);
+
+  const basicInfoById = new Map(
+    studentsBasicInfo.map((student) => [student.id, student]),
+  );
+  const stepsByStudentId = new Map(
+    studentsWithSteps.map((student) => [student.id, student.steps]),
+  );
+
+  const reports: StaffReportRow[] = students.map((student) => {
+    const basicInfo = basicInfoById.get(student.id);
+    const steps = stepsByStudentId.get(student.id) ?? [];
+
+    const certificateStatus =
+      steps.length === 0 || steps.every((step) => step.status === "pending")
+        ? "قيد المصادقة"
+        : steps.every((step) => step.status === "completed")
+          ? "مكتملة"
+          : "قيد الإجراء";
+
+    return {
+      id: student.id,
+      fullName: basicInfo?.nameAr ?? basicInfo?.name ?? student.name,
+      email: student.email,
+      academicId: student.academicId,
+      department: basicInfo?.major ?? (student.department || "-"),
+      graduationYear: basicInfo?.graduationYear?.toString() ?? "-",
+      certificateStatus,
+    };
+  });
 
   return (
-    <StaffSectionShell
-      title="Reports"
-      subtitle="Quick operational snapshots for graduate affairs"
-    >
-      <div className="rounded-[24px] bg-white p-5 shadow-[0_10px_28px_rgba(9,26,43,0.08)]">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <article className="rounded-2xl bg-[#f6f9fc] p-4">
-            <p className="text-sm text-[#426385]">Total students</p>
-            <p className="mt-2 text-3xl font-bold text-[#1a3b5c]">
-              {students.length}
-            </p>
-          </article>
-
-          <article className="rounded-2xl bg-[#f6f9fc] p-4">
-            <p className="text-sm text-[#426385]">Active students</p>
-            <p className="mt-2 text-3xl font-bold text-[#1a3b5c]">
-              {activeStudents}
-            </p>
-          </article>
-        </div>
-      </div>
-    </StaffSectionShell>
+    <section className="-m-4 min-h-full rounded-tl-[32px] bg-[#1a3b5c] p-4 md:-m-6 md:rounded-tl-[48px] md:p-6 xl:-m-8 xl:rounded-tl-[56px] xl:p-8">
+      <StaffReportsTable rows={reports} />
+    </section>
   );
 }

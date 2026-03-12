@@ -174,7 +174,7 @@ export default function StaffNav({
         className={[
           "hidden shrink-0 bg-white lg:flex lg:flex-col",
           "w-[260px] xl:w-[362px]",
-          "min-h-screen",
+          "h-full",
         ].join(" ")}
       >
         {/* Avatar + name */}
@@ -196,7 +196,7 @@ export default function StaffNav({
 
         {/* Nav items */}
         <nav
-          className="flex flex-1 flex-col gap-2 pr-0 xl:gap-3"
+          className="flex flex-1 flex-col gap-2 overflow-y-auto pr-0 xl:gap-3"
           aria-label="Staff navigation"
         >
           {STAFF_NAV_ITEMS.map((item, index) => {

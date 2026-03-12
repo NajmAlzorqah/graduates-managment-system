@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Tajawal } from "next/font/google";
+import { Toaster } from "react-hot-toast";
+import { SessionProvider } from "next-auth/react";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,7 +36,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${tajawal.variable} antialiased`}
       >
-        {children}
+        <SessionProvider>
+          {children}
+          <Toaster position="bottom-center" />
+        </SessionProvider>
       </body>
     </html>
   );
