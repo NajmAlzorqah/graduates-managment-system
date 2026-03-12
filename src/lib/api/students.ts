@@ -4,7 +4,41 @@ import type {
   UpdateStudentInput,
   UpdateStudentProfileInput,
 } from "@/lib/validations/student";
-import type { Student, StudentWithProfile } from "@/types/student";
+import type {
+  Student,
+  StudentBasicInfo,
+  StudentWithProfile,
+  StudentWithSteps,
+} from "@/types/student";
+
+const stepStatusMap = {
+  COMPLETED: "completed",
+  IN_PROGRESS: "in-progress",
+  PENDING: "pending",
+} as const;
+
+export async function getStudentsWithCertSteps(): Promise<StudentWithSteps[]> {
+  const users = await prisma.user.findMany({
+    where: { role: "STUDENT", isApproved: true },
+    include: {
+      studentProfile: true,
+      certificateSteps: { orderBy: { order: "asc" } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    nameAr: u.nameAr,
+    major: u.studentProfile?.major ?? null,
+    steps: u.certificateSteps.map((s) => ({
+      id: s.id,
+      label: s.label,
+      status: stepStatusMap[s.status],
+    })),
+  }));
+}
 
 export async function getStudents(): Promise<Student[]> {
   const users = await prisma.user.findMany({
@@ -214,4 +248,55 @@ export async function createStaffUser(data: {
     email: user.email,
     academicId: user.academicId,
   };
+}
+
+export async function getStudentsBasicInfo(): Promise<StudentBasicInfo[]> {
+  const users = await prisma.user.findMany({
+    where: { role: "STUDENT", isApproved: true },
+    select: {
+      id: true,
+      name: true,
+      nameAr: true,
+      academicId: true,
+      studentProfile: {
+        select: { major: true, graduationYear: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    nameAr: u.nameAr,
+    academicId: u.academicId,
+    major: u.studentProfile?.major ?? null,
+    graduationYear: u.studentProfile?.graduationYear ?? null,
+  }));
+}
+
+export async function getAllApprovedStudentIds(): Promise<string[]> {
+  const users = await prisma.user.findMany({
+    where: { role: "STUDENT", isApproved: true },
+    select: { id: true },
+  });
+  return users.map((u) => u.id);
+}
+
+export async function getStudentIdsByFilter(
+  major?: string,
+  graduationYear?: number,
+): Promise<string[]> {
+  const users = await prisma.user.findMany({
+    where: {
+      role: "STUDENT",
+      isApproved: true,
+      studentProfile: {
+        ...(major ? { major } : {}),
+        ...(graduationYear ? { graduationYear } : {}),
+      },
+    },
+    select: { id: true },
+  });
+  return users.map((u) => u.id);
 }

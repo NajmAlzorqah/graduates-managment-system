@@ -8,11 +8,13 @@ import {
   createStudent,
   deleteStudent,
 } from "@/lib/api/students";
+import { updateStepStatus } from "@/lib/api/certificate-steps";
 import { auth } from "@/lib/auth";
 import {
   createStaffUserSchema,
   createStudentSchema,
 } from "@/lib/validations/student";
+import { updateStepStatusSchema } from "@/lib/validations/certificate-step";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -138,5 +140,31 @@ export async function createStaffUserAction(
       };
     }
     return { success: false, error: "خطأ في إنشاء حساب الموظف" };
+  }
+}
+
+export async function updateStepStatusAction(
+  stepId: string,
+  rawStatus: string,
+): Promise<ActionResult> {
+  const session = await auth();
+  if (
+    !session?.user?.id ||
+    (session.user.role !== "STAFF" && session.user.role !== "ADMIN")
+  ) {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const parsed = updateStepStatusSchema.safeParse({ status: rawStatus });
+  if (!parsed.success) {
+    return { success: false, error: "حالة غير صالحة" };
+  }
+
+  try {
+    await updateStepStatus(stepId, parsed.data.status, session.user.id);
+    revalidatePath("/staff/certificates");
+    return { success: true };
+  } catch {
+    return { success: false, error: "خطأ في تحديث الحالة" };
   }
 }

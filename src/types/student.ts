@@ -46,3 +46,20 @@ export type StudentHomeData = {
   certificateSteps: CertificateStep[];
   documents: DocumentItem[];
 };
+
+export type StudentWithSteps = {
+  id: string;
+  name: string | null;
+  nameAr: string | null;
+  major: string | null;
+  steps: CertificateStep[];
+};
+
+export type StudentBasicInfo = {
+  id: string;
+  name: string | null;
+  nameAr: string | null;
+  academicId: string;
+  major: string | null;
+  graduationYear: number | null;
+};

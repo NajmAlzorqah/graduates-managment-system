@@ -1,27 +1,16 @@
-import StaffSectionShell from "@/components/staff/staff-section-shell";
-import { getSystemNotificationStats } from "@/lib/api/notifications";
+import { getNotifications } from "@/lib/api/notifications";
+import { getStudents } from "@/lib/api/students";
+import NotificationsPageClient from "./client-page";
 
 export default async function StaffNotificationsPage() {
-  const { unreadCount, totalCount } = await getSystemNotificationStats();
-
-  return (
-    <StaffSectionShell
-      title="Notifications"
-      subtitle="Monitor system-wide notification traffic"
-    >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <article className="rounded-[24px] bg-white p-5 shadow-[0_10px_28px_rgba(9,26,43,0.08)]">
-          <p className="text-sm text-[#426385]">Unread notifications</p>
-          <p className="mt-2 text-4xl font-bold text-[#1a3b5c]">
-            {unreadCount}
-          </p>
-        </article>
-
-        <article className="rounded-[24px] bg-white p-5 shadow-[0_10px_28px_rgba(9,26,43,0.08)]">
-          <p className="text-sm text-[#426385]">Total notifications</p>
-          <p className="mt-2 text-4xl font-bold text-[#1a3b5c]">{totalCount}</p>
-        </article>
-      </div>
-    </StaffSectionShell>
+  // This is not ideal, we should fetch notifications for the staff member
+  // but the current API doesn't support that.
+  // We will fetch all students and all notifications for now.
+  const students = await getStudents();
+  const allNotifications = await Promise.all(
+    students.map((s) => getNotifications(s.id)),
   );
+  const notifications = allNotifications.flat();
+
+  return <NotificationsPageClient notifications={notifications} />;
 }
