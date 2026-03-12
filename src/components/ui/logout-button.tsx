@@ -5,9 +5,14 @@ import { logoutAction } from "@/lib/actions/logout";
 
 type LogoutButtonProps = {
   className?: string;
+  /** "default" shows icon + label; "icon" shows icon only */
+  variant?: "default" | "icon";
 };
 
-export default function LogoutButton({ className = "" }: LogoutButtonProps) {
+export default function LogoutButton({
+  className = "",
+  variant = "default",
+}: LogoutButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   function handleLogout() {
@@ -21,13 +26,17 @@ export default function LogoutButton({ className = "" }: LogoutButtonProps) {
       type="button"
       onClick={handleLogout}
       disabled={isPending}
-      className={`inline-flex h-10 items-center gap-2 rounded-xl border border-white/20 bg-[#1a3b5c] px-3.5 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(0,0,0,0.22)] transition-all duration-200 hover:bg-[#14314d] disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      className={
+        variant === "icon"
+          ? `inline-flex h-10 w-10 items-center justify-center rounded-full text-white opacity-90 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50 ${className}`
+          : `inline-flex h-10 items-center gap-2 rounded-xl border border-white/20 bg-[#1a3b5c] px-3.5 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(0,0,0,0.22)] transition-all duration-200 hover:bg-[#14314d] disabled:cursor-not-allowed disabled:opacity-60 ${className}`
+      }
       aria-label="Logout"
     >
-      {/* Logout icon */}
+      {/* Logout arrow icon — matches Figma top-right icon */}
       <svg
-        width="18"
-        height="18"
+        width={variant === "icon" ? 28 : 18}
+        height={variant === "icon" ? 28 : 18}
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -57,7 +66,7 @@ export default function LogoutButton({ className = "" }: LogoutButtonProps) {
           strokeLinecap="round"
         />
       </svg>
-      {isPending ? "Logging out..." : "Logout"}
+      {variant !== "icon" && (isPending ? "Logging out..." : "Logout")}
     </button>
   );
 }

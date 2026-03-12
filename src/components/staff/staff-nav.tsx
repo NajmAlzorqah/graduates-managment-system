@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -56,7 +57,6 @@ function isActivePath(pathname: string, href: string): boolean {
   if (href === "/staff") {
     return pathname === "/staff";
   }
-
   return pathname.startsWith(href);
 }
 
@@ -67,7 +67,7 @@ function StaffNavIcon({
   icon: StaffNavIconName;
   active: boolean;
 }) {
-  const color = active ? "#f4b24d" : "currentColor";
+  const color = active ? "#ffffff" : "#1a3b5c";
 
   if (icon === "home") {
     return (
@@ -148,11 +148,11 @@ function StaffNavIcon({
 
 function StaffUserAvatar() {
   return (
-    <div className="flex size-[112px] items-center justify-center rounded-full bg-[#1a3b5c] shadow-[0_8px_18px_rgba(0,0,0,0.2)] xl:size-[149px]">
+    <div className="flex h-[112px] w-[112px] items-center justify-center rounded-full bg-[#1a3b5c] ring-[6px] ring-[#1a3b5c] xl:h-[149px] xl:w-[149px] xl:ring-[8px]">
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="size-[70px] xl:size-[96px]"
+        className="h-[70px] w-[70px] xl:h-[96px] xl:w-[96px]"
         fill="#ffffff"
       >
         <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.64 0-8.4 2.9-8.4 6.48A1.52 1.52 0 0 0 5.12 22h13.76a1.52 1.52 0 0 0 1.52-1.52C20.4 16.9 16.64 14 12 14Z" />
@@ -169,83 +169,117 @@ export default function StaffNav({
 
   return (
     <>
-      <aside className="hidden w-[300px] shrink-0 bg-[#ececec] pb-10 lg:flex lg:flex-col xl:w-[362px]">
-        <div className="flex flex-col items-center px-6 pt-10 xl:pt-12">
+      {/* ── Desktop sidebar ── */}
+      <aside
+        className={[
+          "hidden shrink-0 bg-white lg:flex lg:flex-col",
+          "w-[260px] xl:w-[362px]",
+          "min-h-screen",
+        ].join(" ")}
+      >
+        {/* Avatar + name */}
+        <div className="flex flex-col items-center px-6 pb-6 pt-8 xl:pb-8 xl:pt-12">
           <StaffUserAvatar />
           <p
-            className="mt-3 text-center text-[24px] leading-none font-bold text-[#1a3b5c]"
+            className="mt-4 text-center text-[20px] font-bold leading-snug text-[#1a3b5c] xl:mt-5 xl:text-[24px]"
             dir="rtl"
           >
             {staffName}
           </p>
           <p
-            className="mt-2 text-center text-[20px] leading-none text-[#355474]"
+            className="mt-1 text-center text-[16px] leading-snug text-[#1a3b5c] xl:text-[20px]"
             dir="rtl"
           >
             {staffDepartment}
           </p>
         </div>
 
+        {/* Nav items */}
         <nav
-          className="mt-7 flex flex-col gap-3 pr-4 xl:mt-9"
+          className="flex flex-1 flex-col gap-2 pr-0 xl:gap-3"
           aria-label="Staff navigation"
         >
-          {STAFF_NAV_ITEMS.map((item) => {
+          {STAFF_NAV_ITEMS.map((item, index) => {
             const active = isActivePath(pathname, item.href);
 
             return (
-              <Link
+              <motion.div
                 key={item.id}
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={[
-                  "group relative flex min-h-[84px] items-center gap-4 rounded-l-[34px] px-5 py-[15px] xl:min-h-[99px] xl:py-4",
-                  "text-[27px] font-medium leading-none transition-all duration-300 ease-out xl:text-[35px]",
-                  active
-                    ? "translate-x-0 bg-[#1a3b5c] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]"
-                    : "text-[#1a3b5c] hover:translate-x-1 hover:bg-[#dbe4ec]",
-                ].join(" ")}
+                initial={{ x: -40, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{
+                  duration: 0.4,
+                  delay: index * 0.07,
+                  ease: "easeOut",
+                }}
               >
-                <span className="flex shrink-0 items-center justify-center text-inherit transition-colors duration-300">
-                  <StaffNavIcon icon={item.icon} active={active} />
-                </span>
-                <span
-                  className="text-[27px] xl:text-[35px]"
-                  style={{ fontWeight: 320 }}
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={[
+                    "group relative flex min-h-[84px] items-center gap-4 pl-5 pr-0 py-3",
+                    "xl:min-h-[99px] xl:pl-6",
+                    "text-[22px] font-light leading-none transition-all duration-300 ease-out xl:text-[28px]",
+                    "rounded-l-none",
+                    active
+                      ? [
+                          "bg-[#1a3b5c] text-white",
+                          "shadow-[0_8px_24px_rgba(0,0,0,0.18)]",
+                          // The pill extends beyond the sidebar's right edge so it looks flush
+                          "mr-[-1px] rounded-l-[40px]",
+                        ].join(" ")
+                      : "text-[#1a3b5c] hover:bg-[#eef3f7] rounded-l-[40px] mr-[-1px]",
+                  ].join(" ")}
                 >
-                  {item.label}
-                </span>
-              </Link>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center xl:h-9 xl:w-9">
+                    <StaffNavIcon icon={item.icon} active={active} />
+                  </span>
+                  <span className="text-[22px] xl:text-[28px]">
+                    {item.label}
+                  </span>
+                </Link>
+              </motion.div>
             );
           })}
         </nav>
       </aside>
 
+      {/* ── Mobile / tablet top scrollable nav ── */}
       <nav
-        className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden"
+        className="flex gap-2 overflow-x-auto pb-1 lg:hidden"
         aria-label="Staff navigation"
       >
-        {STAFF_NAV_ITEMS.map((item) => {
+        {STAFF_NAV_ITEMS.map((item, index) => {
           const active = isActivePath(pathname, item.href);
 
           return (
-            <Link
+            <motion.div
               key={item.id}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={[
-                "flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold",
-                "transition-all duration-300 ease-out",
-                active
-                  ? "bg-[#1a3b5c] text-white shadow-[0_8px_18px_rgba(0,0,0,0.2)]"
-                  : "bg-white text-[#1a3b5c] hover:-translate-y-0.5 hover:bg-[#dbe4ec]",
-              ].join(" ")}
+              initial={{ y: -16, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{
+                duration: 0.3,
+                delay: index * 0.05,
+                ease: "easeOut",
+              }}
             >
-              <span className="size-5">
-                <StaffNavIcon icon={item.icon} active={active} />
-              </span>
-              <span>{item.label}</span>
-            </Link>
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={[
+                  "flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold",
+                  "transition-all duration-300 ease-out",
+                  active
+                    ? "bg-[#1a3b5c] text-white shadow-[0_6px_16px_rgba(0,0,0,0.2)]"
+                    : "bg-white/10 text-white hover:bg-white/20",
+                ].join(" ")}
+              >
+                <span className="flex h-5 w-5 items-center justify-center">
+                  <StaffNavIcon icon={item.icon} active={active} />
+                </span>
+                <span>{item.label}</span>
+              </Link>
+            </motion.div>
           );
         })}
       </nav>

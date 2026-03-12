@@ -25,6 +25,28 @@ export const createStudentSchema = z.object({
 
 export type CreateStudentInput = z.infer<typeof createStudentSchema>;
 
+export const createStaffUserSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  academicId: z
+    .string()
+    .min(3, "Academic ID must be at least 3 characters")
+    .max(20, "Academic ID must be at most 20 characters")
+    .regex(
+      /^[a-zA-Z0-9]+$/,
+      "Academic ID must contain only letters and numbers",
+    ),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one digit"),
+  nameAr: z.string().optional(),
+});
+
+export type CreateStaffUserInput = z.infer<typeof createStaffUserSchema>;
+
 export const updateStudentSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   email: z.string().email("Invalid email address").optional(),

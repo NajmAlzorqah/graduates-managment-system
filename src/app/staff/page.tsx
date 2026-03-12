@@ -1,3 +1,4 @@
+import StaffTodoList from "@/components/staff/staff-todo-list";
 import { getStaffHomeData } from "@/lib/api/staff-home";
 
 type MetricCardProps = {
@@ -8,19 +9,23 @@ type MetricCardProps = {
 
 function MetricCard({ title, value, icon }: MetricCardProps) {
   return (
-    <article className="min-h-[130px] rounded-2xl border-2 border-white bg-[#f4b24d] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.15)] md:min-h-[152px] md:px-5 md:py-4 xl:min-h-[158px]">
-      <div className="flex items-start justify-between gap-3">
+    <article className="flex flex-col gap-3 rounded-2xl bg-[#f4b24d] px-4 py-4 shadow-[0_6px_20px_rgba(0,0,0,0.12)] md:gap-4 md:rounded-3xl md:px-5 md:py-5 xl:px-6 xl:py-6">
+      {/* Header row: title on right (RTL), icon on left */}
+      <div className="flex items-start justify-between gap-2">
+        <span className="flex shrink-0 items-center text-[#1a3b5c]">
+          {icon}
+        </span>
         <h2
-          className="text-right text-base leading-[1.1] font-semibold text-[#1a3b5c] md:text-[24px] xl:text-[32px]"
+          className="text-right text-[18px] font-semibold leading-tight text-[#1a3b5c] md:text-[22px] xl:text-[26px]"
           dir="rtl"
         >
           {title}
         </h2>
-        <span className="mt-1 shrink-0 text-[#1a3b5c] md:mt-0">{icon}</span>
       </div>
 
-      <div className="mt-3 flex justify-center md:mt-4">
-        <div className="flex size-14 items-center justify-center rounded-full bg-[#465b72] text-[30px] font-medium text-white md:size-[58px] md:text-[34px] xl:size-[62px] xl:text-[36px]">
+      {/* Count bubble */}
+      <div className="flex justify-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1a3b5c] text-[26px] font-semibold text-white md:h-[60px] md:w-[60px] md:text-[30px] xl:h-[68px] xl:w-[68px] xl:text-[34px]">
           {value}
         </div>
       </div>
@@ -32,15 +37,19 @@ export default async function StaffDashboardPage() {
   const { stats, todoItems } = await getStaffHomeData();
 
   return (
-    <div className="space-y-6 md:space-y-7">
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-5 xl:gap-8 xl:grid-cols-3">
+    <div className="flex flex-col gap-5 md:gap-6 xl:gap-7">
+      {/* ── Metric cards ── */}
+      <section
+        className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-5 xl:gap-6"
+        aria-label="Statistics"
+      >
         <MetricCard
           title="عدد الطلاب المسجلين اليوم"
           value={stats.registeredTodayCount}
           icon={
             <svg
               viewBox="0 0 24 24"
-              className="size-6 md:size-8 xl:size-10"
+              className="h-8 w-8 xl:h-10 xl:w-10"
               fill="currentColor"
               aria-hidden="true"
             >
@@ -55,13 +64,13 @@ export default async function StaffDashboardPage() {
           icon={
             <svg
               viewBox="0 0 24 24"
-              className="size-6 md:size-8 xl:size-10"
+              className="h-8 w-8 xl:h-10 xl:w-10"
               fill="none"
               aria-hidden="true"
             >
               <path
                 d="M7 2h10v3.5c0 2.15-.84 4.2-2.34 5.74L13.41 12l1.25.76A8.12 8.12 0 0 1 17 18.5V22H7v-3.5c0-2.15.84-4.2 2.34-5.74L10.59 12l-1.25-.76A8.12 8.12 0 0 1 7 5.5V2Z"
-                stroke="currentColor"
+                stroke="#1a3b5c"
                 strokeWidth="1.8"
               />
             </svg>
@@ -74,7 +83,7 @@ export default async function StaffDashboardPage() {
           icon={
             <svg
               viewBox="0 0 24 24"
-              className="size-6 md:size-8 xl:size-10"
+              className="h-8 w-8 xl:h-10 xl:w-10"
               fill="currentColor"
               aria-hidden="true"
             >
@@ -84,44 +93,8 @@ export default async function StaffDashboardPage() {
         />
       </section>
 
-      <section className="rounded-[30px] bg-[#f2f2f2] p-3 shadow-[inset_0_0_0_1px_rgba(26,59,92,0.08)] md:rounded-[56px] md:p-7 xl:p-8">
-        <h2 className="mb-4 text-center text-2xl font-semibold text-[#1a3b5c] md:mb-5 md:text-[36px]">
-          To do list
-        </h2>
-
-        <div className="space-y-3 md:space-y-4">
-          {todoItems.map((item) => (
-            <article
-              key={item.id}
-              className="flex min-h-[74px] items-center gap-3 rounded-[24px] bg-[#1f456f] px-4 py-3 text-white md:min-h-[105px] md:px-6 md:py-4 xl:min-h-[106px]"
-            >
-              <div
-                className="flex flex-col gap-1 text-[#f2f2f2]"
-                aria-hidden="true"
-              >
-                <span className="size-1.5 rounded-full bg-current md:size-2" />
-                <span className="size-1.5 rounded-full bg-current md:size-2" />
-                <span className="size-1.5 rounded-full bg-current md:size-2" />
-              </div>
-
-              <p
-                className="flex-1 text-right text-sm leading-[1.35] md:text-[30px] md:leading-[1.2] xl:text-[34px]"
-                dir="rtl"
-              >
-                {item.label}
-              </p>
-
-              <input
-                type="checkbox"
-                checked={item.completed}
-                readOnly
-                aria-label={`Mark ${item.label} as completed`}
-                className="size-8 shrink-0 cursor-default appearance-none rounded-sm border border-[#ccd5dd] bg-[#f4f4f4] md:size-[40px]"
-              />
-            </article>
-          ))}
-        </div>
-      </section>
+      {/* ── To-do list ── */}
+      <StaffTodoList initialTodos={todoItems} />
     </div>
   );
 }

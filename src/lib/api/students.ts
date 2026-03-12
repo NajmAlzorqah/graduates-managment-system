@@ -180,3 +180,38 @@ export async function getUnapprovedStudents(): Promise<Student[]> {
     status: "suspended" as const,
   }));
 }
+
+export async function createStaffUser(data: {
+  name: string;
+  email: string;
+  academicId: string;
+  password: string;
+  nameAr?: string;
+}): Promise<{
+  id: string;
+  name: string | null;
+  email: string;
+  academicId: string;
+}> {
+  const bcrypt = await import("bcryptjs");
+  const passwordHash = await bcrypt.hash(data.password, 12);
+
+  const user = await prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      academicId: data.academicId,
+      nameAr: data.nameAr ?? null,
+      passwordHash,
+      role: "STAFF",
+      isApproved: true,
+    },
+  });
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    academicId: user.academicId,
+  };
+}
