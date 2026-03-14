@@ -75,7 +75,10 @@ function applyDocumentPreferences(settings: Partial<StaffSettingsState>) {
     document.documentElement.dir = isArabic ? "rtl" : "ltr";
   }
   if (settings.theme) {
-    document.documentElement.classList.toggle("dark", settings.theme === "dark");
+    document.documentElement.classList.toggle(
+      "dark",
+      settings.theme === "dark",
+    );
   }
 }
 
@@ -124,7 +127,7 @@ function SettingsRow({
     <div
       className={cn(
         "flex flex-col gap-3 py-2 md:flex-row md:items-center md:justify-between",
-        !noBorder && "border-b border-[#1a3b5c]/12"
+        !noBorder && "border-b border-[#1a3b5c]/12",
       )}
     >
       <div className="flex items-start justify-end gap-3 text-right">
@@ -133,7 +136,7 @@ function SettingsRow({
           <p
             className={cn(
               "font-['Tajawal',sans-serif] text-[24px] leading-tight text-[#1a3b5c] md:text-[28px]",
-              danger && "text-[#8c4f00]"
+              danger && "text-[#8c4f00]",
             )}
           >
             {label}
@@ -173,7 +176,8 @@ function ActionIconButton({
 
 export default function SettingsForm() {
   const { data: session, update } = useSession();
-  const [settings, setSettings] = useState<StaffSettingsState>(DEFAULT_SETTINGS);
+  const [settings, setSettings] =
+    useState<StaffSettingsState>(DEFAULT_SETTINGS);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [, startTransition] = useTransition();
   const [isNameModalOpen, setNameModalOpen] = useState(false);

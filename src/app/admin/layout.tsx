@@ -1,21 +1,32 @@
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import AdminNav from "@/components/admin/admin-nav";
 import LogoutButton from "@/components/ui/logout-button";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  if (session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Top bar */}
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-        <span className="text-sm font-semibold text-[#1a3b5c] dark:text-white">
-          Admin Portal
-        </span>
-        <LogoutButton />
-      </header>
-      {/* TODO: Add admin sidebar from Figma design */}
-      <main className="flex-1">{children}</main>
+    <div className="flex h-screen overflow-hidden bg-[#1a3b5c]">
+      <AdminNav adminName={session.user.name || "Admin"} adminRole="ادارة" />
+      <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+        <header className="flex h-16 items-center justify-end px-6 lg:h-20">
+          <LogoutButton />
+        </header>
+        <main className="flex-1 px-4 pb-8 md:px-8">{children}</main>
+      </div>
     </div>
   );
 }

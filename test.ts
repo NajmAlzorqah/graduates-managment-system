@@ -11,7 +11,7 @@ async function run() {
       where: { role: "STUDENT", createdAt: { gte: start, lt: end } },
     });
     console.log("success");
-  } catch (e) {
+  } catch (e: any) {
     console.error("ERROR");
     console.error(e.code);
     console.error(e.message);

@@ -195,3 +195,14 @@ model Certificate {
   uploadedBy   User?    @relation("CertificateUploader", fields: [uploadedById], references: [id])
   createdAt    DateTime @default(now())
 }
+
+model Analytics {
+  id        String   @id @default(cuid())
+  type      String   // "TRAFFIC_SOURCE", "LOCATION", "DEVICE"
+  name      String   // e.g., "Google", "United States", "Windows"
+  value     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+}

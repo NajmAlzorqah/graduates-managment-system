@@ -1,10 +1,31 @@
-export default function AdminDashboardPage() {
+import { getAdminHomeData } from "@/lib/api/admin-home";
+import DashboardStats from "@/components/admin/dashboard-stats";
+import AdminCharts from "@/components/admin/admin-charts";
+
+export default async function AdminDashboardPage() {
+  const {
+    stats,
+    totalUsersByMonth,
+    trafficByWebsite,
+    trafficByLocation,
+    trafficByDevice,
+  } = await getAdminHomeData();
+
   return (
-    <div className="space-y-6 p-4 md:p-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Admin Dashboard</h1>
-      <p className="text-sm text-foreground/60">
-        Admin dashboard — replace with Figma design
-      </p>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+        <p className="text-white/60">Welcome back to the admin portal.</p>
+      </div>
+
+      <DashboardStats stats={stats} />
+
+      <AdminCharts
+        totalUsersByMonth={totalUsersByMonth}
+        trafficByWebsite={trafficByWebsite}
+        trafficByLocation={trafficByLocation}
+        trafficByDevice={trafficByDevice}
+      />
     </div>
   );
 }

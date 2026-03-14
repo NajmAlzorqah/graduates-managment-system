@@ -274,6 +274,34 @@ async function seedStudentData(studentId: string, staffId: string) {
   }
 }
 
+// --- Seed Admin Analytics ---
+
+async function seedAdminAnalytics() {
+  const count = await prisma.analytics.count();
+  if (count === 0) {
+    await prisma.analytics.createMany({
+      data: [
+        { type: "TRAFFIC_SOURCE", name: "Google", value: 52.1 },
+        { type: "TRAFFIC_SOURCE", name: "YouTube", value: 22.8 },
+        { type: "TRAFFIC_SOURCE", name: "Instagram", value: 13.9 },
+        { type: "TRAFFIC_SOURCE", name: "Pinterest", value: 11.2 },
+        { type: "LOCATION", name: "United States", value: 52.1 },
+        { type: "LOCATION", name: "Canada", value: 22.8 },
+        { type: "LOCATION", name: "Mexico", value: 13.9 },
+        { type: "LOCATION", name: "Other", value: 11.2 },
+        { type: "DEVICE", name: "Linux", value: 40 },
+        { type: "DEVICE", name: "Mac", value: 80 },
+        { type: "DEVICE", name: "iOS", value: 60 },
+        { type: "DEVICE", name: "Windows", value: 90 },
+        { type: "DEVICE", name: "Android", value: 30 },
+      ],
+    });
+    console.log("  📊 Admin analytics ready");
+  } else {
+    console.log(`  ⏭  Admin analytics already exist (${count})`);
+  }
+}
+
 // ─── Main ────────────────────────────────────────────────────────
 
 async function main() {
@@ -285,6 +313,9 @@ async function main() {
   // Seed domain data for the student user
   console.log("\n📦 Seeding domain data for student...");
   await seedStudentData(student.id, staff.id);
+
+  console.log("\n📊 Seeding admin analytics...");
+  await seedAdminAnalytics();
 
   console.log("\n🎉 Seed complete!");
 }

@@ -56,48 +56,50 @@ export default function UpdateNameModal({
     });
   };
 
-  return (
-    isOpen ? (
+  return isOpen ? (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
+      role="presentation"
+      onClick={onClose}
+    >
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
-        role="presentation"
-        onClick={onClose}
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Update Your Name"
+        onClick={(event) => event.stopPropagation()}
       >
-        <div
-          className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Update Your Name"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <h3 className="mb-4 text-lg font-semibold text-[#1a3b5c]">Update Your Name</h3>
-          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-            <div className="grid gap-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Full Name
-              </label>
-              <input
-                id="name"
-                {...register("name")}
-                className="rounded-md border border-gray-300 px-3 py-2"
-                placeholder="Enter your full name"
-              />
-              {errors.name ? (
-                <p className="text-xs text-red-500">{errors.name.message}</p>
+        <h3 className="mb-4 text-lg font-semibold text-[#1a3b5c]">
+          Update Your Name
+        </h3>
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+          <div className="grid gap-2">
+            <label htmlFor="name" className="text-sm font-medium">
+              Full Name
+            </label>
+            <input
+              id="name"
+              {...register("name")}
+              className="rounded-md border border-gray-300 px-3 py-2"
+              placeholder="Enter your full name"
+            />
+            {errors.name ? (
+              <p className="text-xs text-red-500">{errors.name.message}</p>
+            ) : null}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Save
-              </Button>
-            </div>
-          </form>
-        </div>
+              Save
+            </Button>
+          </div>
+        </form>
       </div>
-    ) : null
-  );
+    </div>
+  ) : null;
 }

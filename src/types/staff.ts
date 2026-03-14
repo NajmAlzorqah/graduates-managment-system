@@ -8,6 +8,7 @@ export type StaffHomeStats = {
   registeredTodayCount: number;
   certificatesUnderReviewCount: number;
   certificatesApprovedCount: number;
+  certificatesDeliveredCount: number;
 };
 
 export type StaffHomeData = {

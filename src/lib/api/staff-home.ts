@@ -39,6 +39,7 @@ export async function getStaffHomeData(): Promise<StaffHomeData> {
     registeredTodayCount,
     certificatesUnderReviewCount,
     certificatesApprovedCount,
+    certificatesDeliveredCount,
     pendingSteps,
   ] = await Promise.all([
     prisma.user.count({
@@ -60,6 +61,7 @@ export async function getStaffHomeData(): Promise<StaffHomeData> {
         status: "APPROVED",
       },
     }),
+    prisma.certificate.count(),
     prisma.certificateStep.findMany({
       where: {
         status: {
@@ -97,6 +99,7 @@ export async function getStaffHomeData(): Promise<StaffHomeData> {
       registeredTodayCount,
       certificatesUnderReviewCount,
       certificatesApprovedCount,
+      certificatesDeliveredCount,
     },
     todoItems,
   };
