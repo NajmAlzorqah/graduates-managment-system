@@ -20,26 +20,25 @@ export default function AdminCharts({
   const maxDeviceValue = Math.max(...trafficByDevice.map((d) => d.value), 1);
 
   return (
-    <div className="mt-8 rounded-[40px] bg-white p-8 shadow-xl">
+    <div className="mt-8 rounded-[30px] bg-white p-4 shadow-xl md:p-8 lg:rounded-[40px]">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         {/* Total Users Line Chart */}
         <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-[#1a3b5c]">
-              Total Users
-            </h3>
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+            <h3 className="text-xl font-semibold text-[#1a3b5c]">Total Users</h3>
             <div className="flex gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <span className="size-3 rounded-full bg-[#ffb354]" />
-                <span>This year</span>
+                <span className="text-black">This year</span>
               </div>
             </div>
           </div>
-          <div className="relative h-64 w-full">
+          <div className="relative h-48 w-full sm:h-64">
             <svg
               viewBox="0 0 400 200"
               className="h-full w-full overflow-visible"
               aria-label="User growth chart"
+              preserveAspectRatio="none"
             >
               {[0, 50, 100, 150].map((y) => (
                 <line
@@ -67,7 +66,7 @@ export default function AdminCharts({
                 strokeWidth="3"
               />
             </svg>
-            <div className="mt-2 flex justify-between text-xs text-gray-400">
+            <div className="mt-4 flex justify-between px-1 text-[10px] text-gray-400 sm:text-xs">
               {totalUsersByMonth.map((d) => (
                 <span key={d.name}>{d.name}</span>
               ))}
@@ -82,8 +81,10 @@ export default function AdminCharts({
           </h3>
           <div className="flex flex-col gap-4">
             {trafficByWebsite.map((site) => (
-              <div key={site.name} className="flex items-center gap-4">
-                <span className="w-20 text-sm text-[#1a3b5c]">{site.name}</span>
+              <div key={site.name} className="flex items-center gap-3 sm:gap-4">
+                <span className="w-16 shrink-0 text-sm text-[#1a3b5c] sm:w-20">
+                  {site.name}
+                </span>
                 <div className="h-2 flex-1 rounded-full bg-gray-100">
                   <motion.div
                     initial={{ width: 0 }}
@@ -91,7 +92,7 @@ export default function AdminCharts({
                     className="h-full rounded-full bg-[#1a3b5c]"
                   />
                 </div>
-                <span className="w-10 text-right text-xs text-gray-400">
+                <span className="w-8 shrink-0 text-right text-xs text-gray-400 sm:w-10">
                   {site.value}%
                 </span>
               </div>
@@ -104,8 +105,8 @@ export default function AdminCharts({
           <h3 className="text-xl font-semibold text-[#1a3b5c]">
             Traffic by Location
           </h3>
-          <div className="flex items-center justify-center gap-8">
-            <div className="relative size-48">
+          <div className="flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-8">
+            <div className="relative size-40 sm:size-48">
               <svg viewBox="0 0 100 100" className="size-full -rotate-90">
                 {trafficByLocation.map((loc, i) => {
                   const total = trafficByLocation.reduce(
@@ -134,10 +135,10 @@ export default function AdminCharts({
                 })}
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="size-20 rounded-full bg-white" />
+                <div className="size-16 rounded-full bg-white sm:size-20" />
               </div>
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:flex sm:flex-col">
               {trafficByLocation.map((loc, i) => {
                 const colors = [
                   "bg-[#1a3b5c]",
@@ -146,12 +147,16 @@ export default function AdminCharts({
                   "bg-gray-200",
                 ];
                 return (
-                  <div key={loc.name} className="flex items-center gap-3">
+                  <div key={loc.name} className="flex items-center gap-2 sm:gap-3">
                     <span
-                      className={`size-3 rounded-full ${colors[i % colors.length]}`}
+                      className={`size-2.5 shrink-0 rounded-full ${colors[i % colors.length]}`}
                     />
-                    <span className="text-sm text-[#1a3b5c]">{loc.name}</span>
-                    <span className="text-sm font-semibold">{loc.value}%</span>
+                    <span className="truncate text-xs text-[#1a3b5c] sm:text-sm">
+                      {loc.name}
+                    </span>
+                    <span className="text-xs font-semibold text-black sm:text-sm">
+                      {loc.value}%
+                    </span>
                   </div>
                 );
               })}
@@ -164,7 +169,7 @@ export default function AdminCharts({
           <h3 className="text-xl font-semibold text-[#1a3b5c]">
             Traffic by Device
           </h3>
-          <div className="flex h-48 items-end justify-between gap-4">
+          <div className="flex h-40 items-end justify-between gap-2 sm:h-48 sm:gap-4">
             {trafficByDevice.map((device, i) => (
               <div
                 key={device.name}
@@ -175,9 +180,11 @@ export default function AdminCharts({
                   animate={{
                     height: `${(device.value / maxDeviceValue) * 100}%`,
                   }}
-                  className={`w-full rounded-lg ${i % 2 === 0 ? "bg-[#ffb354]" : "bg-[#1a3b5c]"}`}
+                  className={`w-full max-w-[40px] rounded-t-lg ${i % 2 === 0 ? "bg-[#ffb354]" : "bg-[#1a3b5c]"}`}
                 />
-                <span className="text-xs text-gray-400">{device.name}</span>
+                <span className="text-[10px] text-gray-400 sm:text-xs">
+                  {device.name}
+                </span>
               </div>
             ))}
           </div>

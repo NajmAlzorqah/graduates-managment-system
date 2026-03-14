@@ -19,14 +19,18 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#1a3b5c]">
-      <AdminNav adminName={session.user.name || "Admin"} adminRole="ادارة" />
+    <div className="flex h-screen flex-col overflow-hidden bg-[#1a3b5c] lg:flex-row">
+      <AdminNav
+        adminName={session.user.name || "Admin"}
+        adminRole="ادارة"
+      />
       <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
         <header className="flex h-16 items-center justify-end px-6 lg:h-20">
           <LogoutButton />
         </header>
-        <main className="flex-1 px-4 pb-8 md:px-8">{children}</main>
+        <main className="flex-1 px-4 pb-8 md:px-8 lg:px-12">{children}</main>
       </div>
     </div>
   );
-}
+  }
+

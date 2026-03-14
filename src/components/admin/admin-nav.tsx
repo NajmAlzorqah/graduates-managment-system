@@ -190,7 +190,7 @@ export default function AdminNav({ adminName, adminRole }: AdminNavProps) {
 
       {/* Mobile top nav */}
       <nav
-        className="flex gap-2 overflow-x-auto pb-2 lg:hidden"
+        className="flex w-full shrink-0 gap-3 overflow-x-auto border-b border-white/10 bg-[#1a3b5c] px-4 py-3 lg:hidden"
         aria-label="Admin mobile navigation"
       >
         {ADMIN_NAV_ITEMS.map((item, index) => {
@@ -211,14 +211,14 @@ export default function AdminNav({ adminName, adminRole }: AdminNavProps) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={[
-                  "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold",
-                  "transition-all duration-300 ease-out",
+                  "flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold sm:text-sm",
+                  "transition-all duration-300 ease-out whitespace-nowrap",
                   active
-                    ? "bg-[#1a3b5c] text-white shadow-md"
-                    : "bg-white text-[#1a3b5c] hover:bg-[#eef3f7]",
+                    ? "bg-white text-[#1a3b5c] shadow-lg"
+                    : "bg-white/10 text-white hover:bg-white/20",
                 ].join(" ")}
               >
-                <span className="flex h-5 w-5 items-center justify-center">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center sm:h-5 sm:w-5">
                   <AdminNavIcon icon={item.icon} active={active} />
                 </span>
                 <span>{item.label}</span>
