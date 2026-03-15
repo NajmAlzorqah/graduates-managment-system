@@ -1,6 +1,6 @@
-import { getAdminHomeData } from "@/lib/api/admin-home";
-import DashboardStats from "@/components/admin/dashboard-stats";
 import AdminCharts from "@/components/admin/admin-charts";
+import DashboardStats from "@/components/admin/dashboard-stats";
+import { getAdminHomeData } from "@/lib/api/admin-home";
 
 export default async function AdminDashboardPage() {
   const {

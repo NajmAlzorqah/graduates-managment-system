@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import {
   Bell,
+  Download,
   Languages,
   LockKeyhole,
   Mail,
@@ -14,25 +15,25 @@ import { useEffect, useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
 import AnimatedSwitch from "@/components/ui/animated-switch";
-import { updateStaffPreferences } from "@/lib/actions/staff";
+import { updateAdminPreferences } from "@/lib/actions/admin";
 import { cn } from "@/lib/utils";
-import UpdateNameModal from "./update-name-modal";
-import UpdatePasswordModal from "./update-password-modal";
+import UpdateAdminNameModal from "./update-admin-name-modal";
+import UpdateAdminPasswordModal from "./update-admin-password-modal";
 
 type NotificationPreference = "on" | "off";
 type LanguagePreference = "ar" | "en";
 type ThemePreference = "light" | "dark";
 
-type StaffSettingsState = {
+type AdminSettingsState = {
   emailNotifications: NotificationPreference;
   siteNotifications: NotificationPreference;
   language: LanguagePreference;
   theme: ThemePreference;
 };
 
-const STORAGE_KEY = "staff-settings";
+const STORAGE_KEY = "admin-settings";
 
-const DEFAULT_SETTINGS: StaffSettingsState = {
+const DEFAULT_SETTINGS: AdminSettingsState = {
   emailNotifications: "on",
   siteNotifications: "on",
   language: "ar",
@@ -54,21 +55,21 @@ const SWITCH_OPTIONS = {
   ] as const,
 };
 
-function readStoredSettings(): StaffSettingsState {
+function readStoredSettings(): AdminSettingsState {
   if (typeof window === "undefined") {
     return DEFAULT_SETTINGS;
   }
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(stored) as Partial<StaffSettingsState>;
+    const parsed = JSON.parse(stored) as Partial<AdminSettingsState>;
     return { ...DEFAULT_SETTINGS, ...parsed };
   } catch {
     return DEFAULT_SETTINGS;
   }
 }
 
-function applyDocumentPreferences(settings: Partial<StaffSettingsState>) {
+function applyDocumentPreferences(settings: Partial<AdminSettingsState>) {
   if (settings.language) {
     const isArabic = settings.language === "ar";
     document.documentElement.lang = isArabic ? "ar" : "en";
@@ -101,7 +102,7 @@ function SettingsCard({
       <h2 className="mb-2 px-2 text-right font-['Tajawal',sans-serif] text-[28px] leading-none text-[#1a3b5c] md:mb-3 md:text-[32px]">
         {title}
       </h2>
-      <div className="rounded-[24px] bg-[#f7b34d] p-3 shadow-[inset_0_4px_6px_rgba(0,0,0,0.12)] md:p-4">
+      <div className="rounded-[24px] bg-[#ffb755] p-3 shadow-[inset_0_4px_6px_rgba(0,0,0,0.12)] md:p-4">
         {children}
       </div>
     </motion.section>
@@ -167,17 +168,17 @@ function ActionIconButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/35 bg-[#1a3b5c]/8 text-white transition duration-200 hover:-translate-y-0.5 hover:bg-[#1a3b5c]/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a3b5c] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7b34d]"
+      className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/35 bg-[#1a3b5c]/8 text-white transition duration-200 hover:-translate-y-0.5 hover:bg-[#1a3b5c]/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a3b5c] focus-visible:ring-offset-2 focus-visible:ring-offset-[#ffb755]"
     >
       {children}
     </button>
   );
 }
 
-export default function SettingsForm() {
+export default function AdminSettingsForm() {
   const { data: session, update } = useSession();
   const [settings, setSettings] =
-    useState<StaffSettingsState>(DEFAULT_SETTINGS);
+    useState<AdminSettingsState>(DEFAULT_SETTINGS);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [, startTransition] = useTransition();
   const [isNameModalOpen, setNameModalOpen] = useState(false);
@@ -190,9 +191,9 @@ export default function SettingsForm() {
     setHasLoaded(true);
   }, []);
 
-  const handleSettingChange = <K extends keyof StaffSettingsState>(
+  const handleSettingChange = <K extends keyof AdminSettingsState>(
     key: K,
-    value: StaffSettingsState[K],
+    value: AdminSettingsState[K],
   ) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
@@ -205,7 +206,7 @@ export default function SettingsForm() {
 
     if (key === "emailNotifications" || key === "siteNotifications") {
       startTransition(() => {
-        updateStaffPreferences({
+        updateAdminPreferences({
           emailNotifications: newSettings.emailNotifications,
           siteNotifications: newSettings.siteNotifications,
         }).then((res) => {
@@ -215,7 +216,6 @@ export default function SettingsForm() {
       });
     }
     if (key === "language") {
-      // This will cause a page reload and i18n context to update
       document.location.reload();
     }
   };
@@ -223,7 +223,7 @@ export default function SettingsForm() {
   if (!hasLoaded) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <p>Loading settings...</p>
+        <p className="text-white">Loading settings...</p>
       </div>
     );
   }
@@ -231,7 +231,7 @@ export default function SettingsForm() {
   return (
     <>
       <div className="flex flex-col gap-6 pb-24">
-        <SettingsCard title="الحساب" delay={0.1}>
+        <SettingsCard title="اعدادات الحساب:" delay={0.1}>
           <SettingsRow
             icon={<PenLine size={28} />}
             label="تعديل الاسم"
@@ -247,7 +247,7 @@ export default function SettingsForm() {
           />
           <SettingsRow
             icon={<LockKeyhole size={28} />}
-            label="تغيير كلمة المرور"
+            label="كلمة المرور(تغيير/إعادة تعيين )"
             description="ننصح باستخدام كلمة مرور قوية وتغييرها بشكل دوري"
             action={
               <ActionIconButton
@@ -258,18 +258,17 @@ export default function SettingsForm() {
               </ActionIconButton>
             }
             noBorder
-            danger
           />
         </SettingsCard>
 
-        <SettingsCard title="الإشعارات" delay={0.2}>
+        <SettingsCard title="إعدادات الإشعارات:" delay={0.2}>
           <SettingsRow
             icon={<Mail size={28} />}
-            label="إشعارات البريد الإلكتروني"
+            label="أشعارات البريد"
             description="تلقي التحديثات الهامة والأخبار عبر البريد الإلكتروني"
             action={
               <AnimatedSwitch
-                ariaLabel="إشعارات البريد الإلكتروني"
+                ariaLabel="أشعارات البريد"
                 options={[...SWITCH_OPTIONS.notification]}
                 value={settings.emailNotifications}
                 onChange={(value) =>
@@ -283,11 +282,11 @@ export default function SettingsForm() {
           />
           <SettingsRow
             icon={<Bell size={28} />}
-            label="الإشعارات داخل الموقع"
+            label="التنبيهات داخل الموقع"
             description="إظهار الإشعارات والتنبيهات أثناء تصفحك للموقع"
             action={
               <AnimatedSwitch
-                ariaLabel="الإشعارات داخل الموقع"
+                ariaLabel="التنبيهات داخل الموقع"
                 options={[...SWITCH_OPTIONS.notification]}
                 value={settings.siteNotifications}
                 onChange={(value) =>
@@ -302,13 +301,13 @@ export default function SettingsForm() {
           />
         </SettingsCard>
 
-        <SettingsCard title="التخصيص" delay={0.3}>
+        <SettingsCard title="إعدادات الواجهه:" delay={0.3}>
           <SettingsRow
             icon={<Languages size={28} />}
-            label="لغة الواجهة"
+            label="اختيار اللغة"
             action={
               <AnimatedSwitch
-                ariaLabel="لغة الواجهة"
+                ariaLabel="اختيار اللغة"
                 options={[...SWITCH_OPTIONS.language]}
                 value={settings.language}
                 onChange={(value) =>
@@ -319,10 +318,10 @@ export default function SettingsForm() {
           />
           <SettingsRow
             icon={<SunMedium size={28} />}
-            label="السمة"
+            label="النمط"
             action={
               <AnimatedSwitch
-                ariaLabel="السمة"
+                ariaLabel="النمط"
                 options={[...SWITCH_OPTIONS.theme]}
                 value={settings.theme}
                 onChange={(value) =>
@@ -333,16 +332,33 @@ export default function SettingsForm() {
             noBorder
           />
         </SettingsCard>
+
+        <SettingsCard title="إعدادات متقدمة:" delay={0.4}>
+          <SettingsRow
+            icon={<Download size={28} />}
+            label="تصدير البيانات"
+            description="تحميل نسخة من بياناتك وإحصائياتك"
+            action={
+              <ActionIconButton
+                label="تصدير البيانات"
+                onClick={() => toast.success("Data export started...")}
+              >
+                <Download size={24} />
+              </ActionIconButton>
+            }
+            noBorder
+          />
+        </SettingsCard>
       </div>
-      <UpdateNameModal
+      <UpdateAdminNameModal
         isOpen={isNameModalOpen}
         onClose={() => {
           setNameModalOpen(false);
-          update(); // Force session update to reflect new name
+          update(); // Force session update
         }}
         currentName={session?.user?.name ?? ""}
       />
-      <UpdatePasswordModal
+      <UpdateAdminPasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setPasswordModalOpen(false)}
       />

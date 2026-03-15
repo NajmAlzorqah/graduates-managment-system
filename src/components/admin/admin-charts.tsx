@@ -1,7 +1,7 @@
 "use client";
 
-import type { AdminChartData } from "@/types/admin";
 import { motion } from "framer-motion";
+import type { AdminChartData } from "@/types/admin";
 
 type AdminChartsProps = {
   totalUsersByMonth: AdminChartData[];
@@ -25,7 +25,9 @@ export default function AdminCharts({
         {/* Total Users Line Chart */}
         <div className="flex flex-col gap-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-            <h3 className="text-xl font-semibold text-[#1a3b5c]">Total Users</h3>
+            <h3 className="text-xl font-semibold text-[#1a3b5c]">
+              Total Users
+            </h3>
             <div className="flex gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <span className="size-3 rounded-full bg-[#ffb354]" />
@@ -147,7 +149,10 @@ export default function AdminCharts({
                   "bg-gray-200",
                 ];
                 return (
-                  <div key={loc.name} className="flex items-center gap-2 sm:gap-3">
+                  <div
+                    key={loc.name}
+                    className="flex items-center gap-2 sm:gap-3"
+                  >
                     <span
                       className={`size-2.5 shrink-0 rounded-full ${colors[i % colors.length]}`}
                     />

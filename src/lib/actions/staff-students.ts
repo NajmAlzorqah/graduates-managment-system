@@ -1,20 +1,20 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { updateStepStatus } from "@/lib/api/certificate-steps";
 import {
   approveStudent,
   createStaffUser,
   createStudent,
   deleteStudent,
 } from "@/lib/api/students";
-import { updateStepStatus } from "@/lib/api/certificate-steps";
 import { auth } from "@/lib/auth";
+import { updateStepStatusSchema } from "@/lib/validations/certificate-step";
 import {
   createStaffUserSchema,
   createStudentSchema,
 } from "@/lib/validations/student";
-import { updateStepStatusSchema } from "@/lib/validations/certificate-step";
 
 type ActionResult = { success: true } | { success: false; error: string };
 

@@ -11,10 +11,12 @@ async function run() {
       where: { role: "STUDENT", createdAt: { gte: start, lt: end } },
     });
     console.log("success");
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("ERROR");
-    console.error(e.code);
-    console.error(e.message);
+    if (e instanceof Error) {
+      console.error((e as { code?: string }).code);
+      console.error(e.message);
+    }
   }
 }
 run();

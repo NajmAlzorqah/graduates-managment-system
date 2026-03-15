@@ -12,3 +12,13 @@ export type AdminHomeData = {
   trafficByLocation: AdminChartData[];
   trafficByDevice: AdminChartData[];
 };
+
+export type StudentReport = {
+  id: string;
+  nameAr: string | null;
+  email: string;
+  academicId: string;
+  major: string | null;
+  graduationYear: number | null;
+  certificateStatus: string;
+};

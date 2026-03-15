@@ -2,10 +2,10 @@ import StaffReportsTable, {
   type StaffReportRow,
 } from "@/components/staff/staff-reports-table";
 import {
+  getStudents,
   getStudentsBasicInfo,
   getStudentsWithCertSteps,
 } from "@/lib/api/students";
-import { getStudents } from "@/lib/api/students";
 
 export default async function StaffReportsPage() {
   const [students, studentsBasicInfo, studentsWithSteps] = await Promise.all([

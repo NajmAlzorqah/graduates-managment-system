@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Notification } from "@/types/notification";
+import type { Notification, NotificationWithUsers } from "@/types/notification";
 
 export async function getNotifications(
   userId: string,
@@ -18,6 +18,69 @@ export async function getNotifications(
     sentById: n.sentById,
     createdAt: n.createdAt,
   }));
+}
+
+export async function getNotificationsWithUsers(): Promise<
+  NotificationWithUsers[]
+> {
+  const notifications = await prisma.notification.findMany({
+    include: {
+      user: {
+        select: {
+          nameAr: true,
+          role: true,
+        },
+      },
+      sentBy: {
+        select: {
+          nameAr: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const totalStudents = await prisma.user.count({
+    where: { role: "STUDENT", isApproved: true },
+  });
+
+  // Group notifications by (title, message, sentById, createdAt_rounded_to_minute)
+  const groups: Record<string, NotificationWithUsers[]> = {};
+
+  for (const n of notifications) {
+    const dateKey = new Date(n.createdAt).toISOString().slice(0, 16); // Round to minute
+    const key = `${n.title}|${n.message}|${n.sentById}|${dateKey}`;
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(n as NotificationWithUsers);
+  }
+
+  const result: NotificationWithUsers[] = [];
+
+  for (const key in groups) {
+    const group = groups[key];
+    if (group.length >= totalStudents && totalStudents > 0) {
+      // This was sent to all
+      const base = group[0];
+      result.push({
+        ...base,
+        user: {
+          nameAr: "الكل (Sent to all)",
+          role: "ALL",
+        },
+      });
+    } else {
+      // Add them individually
+      result.push(...group);
+    }
+  }
+
+  // Re-sort by createdAt desc
+  return result.sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  ) as NotificationWithUsers[];
 }
 
 export async function getUnreadCount(userId: string): Promise<number> {
@@ -76,6 +139,18 @@ export async function markAllAsRead(userId: string): Promise<void> {
     where: { userId, isRead: false },
     data: { isRead: true },
   });
+}
+
+export async function deleteNotification(
+  notificationId: string,
+): Promise<void> {
+  await prisma.notification.delete({
+    where: { id: notificationId },
+  });
+}
+
+export async function deleteAllNotifications(): Promise<void> {
+  await prisma.notification.deleteMany();
 }
 
 export async function getSystemNotificationStats(): Promise<{

@@ -11,9 +11,9 @@ const updateNameSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters long."),
 });
 
-export async function updateStaffName(formData: FormData) {
+export async function updateAdminName(formData: FormData) {
   const session = await auth();
-  if (!session?.user?.id || session.user.role !== "STAFF") {
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
     return { error: "Not authenticated" };
   }
 
@@ -28,7 +28,7 @@ export async function updateStaffName(formData: FormData) {
       data: { name: result.data.name },
     });
 
-    revalidatePath("/staff/settings");
+    revalidatePath("/admin/settings");
     return { success: "Name updated successfully." };
   } catch {
     return { error: "Failed to update name." };
@@ -48,9 +48,9 @@ const updatePasswordSchema = z
     path: ["confirmPassword"],
   });
 
-export async function updateStaffPassword(formData: FormData) {
+export async function updateAdminPassword(formData: FormData) {
   const session = await auth();
-  if (!session?.user?.id || session.user.role !== "STAFF") {
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
     return { error: "Not authenticated" };
   }
 
@@ -97,12 +97,12 @@ const updatePreferencesSchema = z.object({
   siteNotifications: z.enum(["on", "off"]),
 });
 
-export async function updateStaffPreferences(prefs: {
+export async function updateAdminPreferences(prefs: {
   emailNotifications: "on" | "off";
   siteNotifications: "on" | "off";
 }) {
   const session = await auth();
-  if (!session?.user?.id || session.user.role !== "STAFF") {
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
     return { error: "Not authenticated" };
   }
 
@@ -112,7 +112,9 @@ export async function updateStaffPreferences(prefs: {
   }
 
   try {
-    revalidatePath("/staff/settings");
+    // In a real app, you might save these to the database.
+    // For now, we'll just follow the staff pattern of revalidating.
+    revalidatePath("/admin/settings");
     return { success: "Preferences updated." };
   } catch {
     return { error: "Failed to update preferences." };

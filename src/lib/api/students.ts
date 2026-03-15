@@ -250,6 +250,26 @@ export async function createStaffUser(data: {
   };
 }
 
+export async function getStaffUsers(): Promise<
+  {
+    id: string;
+    name: string | null;
+    nameAr: string | null;
+  }[]
+> {
+  const users = await prisma.user.findMany({
+    where: { role: "STAFF" },
+    select: {
+      id: true,
+      name: true,
+      nameAr: true,
+    },
+    orderBy: { nameAr: "asc" },
+  });
+
+  return users;
+}
+
 export async function getStudentsBasicInfo(): Promise<StudentBasicInfo[]> {
   const users = await prisma.user.findMany({
     where: { role: "STUDENT", isApproved: true },

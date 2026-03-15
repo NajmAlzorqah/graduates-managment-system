@@ -33,19 +33,6 @@ function SearchIcon() {
   );
 }
 
-function FilterIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-5 w-5 shrink-0"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M3 6h18v2H3V6zm6 12h6v-2H9v2zm12-7H3v2h18v-2z" />
-    </svg>
-  );
-}
-
 function ChevronDownIcon() {
   return (
     <svg

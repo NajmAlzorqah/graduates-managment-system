@@ -1,5 +1,5 @@
+import { ClipboardCheck, FileCheck, Hourglass } from "lucide-react";
 import type { StaffHomeStats } from "@/types/staff";
-import { FileCheck, Hourglass, ClipboardCheck } from "lucide-react";
 
 type DashboardStatsProps = {
   stats: StaffHomeStats;
@@ -51,5 +51,4 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
       ))}
     </div>
   );
-  }
-
+}

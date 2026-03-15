@@ -7,3 +7,14 @@ export type Notification = {
   sentById: string | null;
   createdAt: Date;
 };
+
+export type NotificationWithUsers = Notification & {
+  user: {
+    nameAr: string | null;
+    role: string;
+  };
+  sentBy: {
+    nameAr: string | null;
+    role: string;
+  } | null;
+};

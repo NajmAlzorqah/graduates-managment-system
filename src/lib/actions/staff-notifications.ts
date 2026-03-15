@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import {
   createGroupNotification,
   createNotification,
+  deleteAllNotifications,
+  deleteNotification,
 } from "@/lib/api/notifications";
 import {
   getAllApprovedStudentIds,
@@ -50,6 +52,7 @@ export async function createNotificationAction(
       await createGroupNotification(session.user.id, userIds, title, message);
     }
     revalidatePath("/staff/notifications");
+    revalidatePath("/admin/notifications");
     return { success: true };
   } catch (_error) {
     return { success: false, error: "Failed to create notification" };
@@ -108,9 +111,50 @@ export async function sendNewNotificationAction(
     }
 
     revalidatePath("/staff/notifications");
+    revalidatePath("/admin/notifications");
     return { success: true };
   } catch (error) {
     console.error("Error sending notification:", error);
     return { success: false, error: "فشل في إرسال الإشعار" };
+  }
+}
+
+export async function deleteNotificationAction(
+  id: string,
+): Promise<ActionResult> {
+  const session = await auth();
+  if (
+    !session?.user?.id ||
+    (session.user.role !== "STAFF" && session.user.role !== "ADMIN")
+  ) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    await deleteNotification(id);
+    revalidatePath("/staff/notifications");
+    revalidatePath("/admin/notifications");
+    return { success: true };
+  } catch (_error) {
+    return { success: false, error: "Failed to delete notification" };
+  }
+}
+
+export async function deleteAllNotificationsAction(): Promise<ActionResult> {
+  const session = await auth();
+  if (
+    !session?.user?.id ||
+    (session.user.role !== "STAFF" && session.user.role !== "ADMIN")
+  ) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    await deleteAllNotifications();
+    revalidatePath("/staff/notifications");
+    revalidatePath("/admin/notifications");
+    return { success: true };
+  } catch (_error) {
+    return { success: false, error: "Failed to clear notifications" };
   }
 }

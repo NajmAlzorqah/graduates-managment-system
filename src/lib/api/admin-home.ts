@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { AdminHomeData, AdminChartData } from "@/types/admin";
+import type { AdminChartData, AdminHomeData } from "@/types/admin";
 import { getStaffHomeData } from "./staff-home";
 
 export async function getAdminHomeData(): Promise<AdminHomeData> {
