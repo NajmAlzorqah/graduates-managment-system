@@ -41,7 +41,9 @@ export default function AdminCharts({
               className="h-full w-full overflow-visible"
               aria-label="User growth chart"
               preserveAspectRatio="none"
+              role="img"
             >
+              <title>User growth chart</title>
               {[0, 50, 100, 150].map((y) => (
                 <line
                   key={y}
@@ -109,7 +111,13 @@ export default function AdminCharts({
           </h3>
           <div className="flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-8">
             <div className="relative size-40 sm:size-48">
-              <svg viewBox="0 0 100 100" className="size-full -rotate-90">
+              <svg
+                viewBox="0 0 100 100"
+                className="size-full -rotate-90"
+                role="img"
+                aria-label="Traffic by Location chart"
+              >
+                <title>Traffic by Location chart</title>
                 {trafficByLocation.map((loc, i) => {
                   const total = trafficByLocation.reduce(
                     (acc, curr) => acc + curr.value,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { SerializedNotification } from "./notification-card";
+import { confirmStepAction } from "@/lib/actions/student";
 
 type NotificationDetailsModalProps = {
   notification: SerializedNotification;
@@ -58,23 +59,14 @@ export default function NotificationDetailsModal({
 
     try {
       setIsSubmitting(true);
-      const payload = {
-        major: formData.major,
-        graduationYear: Number(formData.graduationYear),
-        studentCardNumber: formData.studentCardNumber,
-      };
+      
+      const res = await confirmStepAction(2);
 
-      const res = await fetch("/api/graduation-form", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error("فشل في تقديم الاستمارة");
+      if (res.error) {
+        throw new Error(res.error);
       }
 
-      toast.success("تم تأكيد الاستمارة بنجاح", {
+      toast.success("تم تأكيد البيانات بنجاح", {
         style: { fontFamily: "Tajawal, sans-serif" },
       });
       setIsConfirming(false);

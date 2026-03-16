@@ -69,6 +69,17 @@ export async function submitGraduationForm(
       },
     });
 
+    // Update Step 1 (Fill graduation form) to COMPLETED
+    await tx.certificateStep.updateMany({
+      where: {
+        userId,
+        order: 1,
+      },
+      data: {
+        status: "COMPLETED",
+      },
+    });
+
     return gf;
   });
 

@@ -1,19 +1,21 @@
+import type { Metadata } from "next";
 import CertificateStatusList from "@/components/staff/certificate-status-list";
-import StaffSectionShell from "@/components/staff/staff-section-shell";
+import { getNotificationTemplates } from "@/lib/api/notification-templates";
 import { getStudentsWithCertSteps } from "@/lib/api/students";
 
-export default async function StaffCertificatesPage() {
-  const students = await getStudentsWithCertSteps();
-  const majors = [
-    ...new Set(students.map((s) => s.major).filter(Boolean)),
-  ] as string[];
+export const metadata: Metadata = {
+  title: "حالة الشهادة | نظام إدارة الخريجين",
+};
+
+export default async function CertificateStatusPage() {
+  const [students, templates] = await Promise.all([
+    getStudentsWithCertSteps(),
+    getNotificationTemplates(),
+  ]);
 
   return (
-    <StaffSectionShell
-      title="Certificate Status"
-      subtitle="Live overview of graduation certificate processing"
-    >
-      <CertificateStatusList students={students} majors={majors} />
-    </StaffSectionShell>
+    <div className="max-w-[1200px] mx-auto">
+      <CertificateStatusList students={students} templates={templates} />
+    </div>
   );
 }

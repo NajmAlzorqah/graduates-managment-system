@@ -2,9 +2,9 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Search } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import AdminNotificationCard from "@/components/admin/admin-notification-card";
-import SendNotificationModal from "@/components/admin/send-notification-modal";
 import { Input } from "@/components/ui/input";
 import type { NotificationWithUsers } from "@/types/notification";
 
@@ -18,7 +18,6 @@ export default function AdminNotificationsClient({
   staffUsers,
 }: NotificationsClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterType, setFilterType] = useState("all");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedSenderId, setSelectedSenderId] = useState("");
@@ -126,13 +125,12 @@ export default function AdminNotificationsClient({
         </div>
 
         {/* Send New Button */}
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="h-[52px] min-w-[180px] rounded-full bg-[#ffb755] px-8 text-[20px] font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
+        <Link
+          href="/admin/notifications/new"
+          className="flex h-[52px] min-w-[180px] items-center justify-center rounded-full bg-[#ffb755] px-8 text-[20px] font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
         >
           send new
-        </button>
+        </Link>
       </div>
 
       {/* Main Content Card Container */}
@@ -158,11 +156,6 @@ export default function AdminNotificationsClient({
           )}
         </div>
       </div>
-
-      <SendNotificationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </div>
   );
 }

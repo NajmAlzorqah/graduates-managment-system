@@ -67,3 +67,29 @@ export async function updateOwnProfileAction(
     return { error: "حدث خطأ أثناء تحديث البيانات" };
   }
 }
+
+export async function confirmStepAction(stepOrder: number) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "غير مصرح" };
+
+  try {
+    await prisma.certificateStep.updateMany({
+      where: {
+        userId: session.user.id,
+        order: stepOrder,
+      },
+      data: {
+        status: "COMPLETED",
+      },
+    });
+
+    revalidatePath("/student/notifications");
+    revalidatePath("/student");
+    revalidatePath("/staff/certificates");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error confirming step:", error);
+    return { error: "حدث خطأ أثناء تأكيد الخطوة" };
+  }
+}

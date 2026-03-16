@@ -29,9 +29,9 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-      {items.map((item, index) => (
+      {items.map((item) => (
         <div
-          key={index}
+          key={item.label}
           className={`${item.bgColor} flex h-32 flex-col items-center justify-center rounded-[20px] p-4 shadow-lg sm:h-40 sm:p-6`}
         >
           <div className="flex w-full items-center justify-between gap-2">
