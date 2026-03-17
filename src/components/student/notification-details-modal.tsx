@@ -59,7 +59,7 @@ export default function NotificationDetailsModal({
 
     try {
       setIsSubmitting(true);
-      
+
       const res = await confirmStepAction(2);
 
       if (res.error) {

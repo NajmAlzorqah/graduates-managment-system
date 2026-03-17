@@ -51,8 +51,17 @@ export type StudentWithSteps = {
   id: string;
   name: string | null;
   nameAr: string | null;
+  nameEn: string | null;
   major: string | null;
   steps: CertificateStep[];
+  graduationFormSubmitted: boolean;
+  documents: {
+    id: string;
+    label: string;
+    documentType: string;
+    filePath: string;
+    status: string;
+  }[];
 };
 
 export type StudentBasicInfo = {

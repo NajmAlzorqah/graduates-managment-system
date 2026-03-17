@@ -20,6 +20,56 @@ export async function getNotifications(
   }));
 }
 
+export async function getOutgoingNotifications(
+  senderId: string,
+): Promise<NotificationWithUsers[]> {
+  const notifications = await prisma.notification.findMany({
+    where: { sentById: senderId },
+    include: {
+      user: {
+        select: {
+          nameAr: true,
+          role: true,
+        },
+      },
+      sentBy: {
+        select: {
+          nameAr: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return notifications as NotificationWithUsers[];
+}
+
+export async function getIncomingNotifications(
+  userId: string,
+): Promise<NotificationWithUsers[]> {
+  const notifications = await prisma.notification.findMany({
+    where: { userId },
+    include: {
+      user: {
+        select: {
+          nameAr: true,
+          role: true,
+        },
+      },
+      sentBy: {
+        select: {
+          nameAr: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return notifications as NotificationWithUsers[];
+}
+
 export async function getNotificationsWithUsers(): Promise<
   NotificationWithUsers[]
 > {
@@ -95,6 +145,15 @@ export async function createNotification(
   title: string,
   message: string,
 ): Promise<Notification> {
+  const sender = await prisma.user.findUnique({
+    where: { id: senderId },
+    select: { role: true },
+  });
+
+  if (!sender || (sender.role !== "ADMIN" && sender.role !== "STAFF")) {
+    throw new Error("Only Admin or Staff can send notifications");
+  }
+
   const n = await prisma.notification.create({
     data: { userId, title, message, sentById: senderId },
   });
@@ -116,6 +175,15 @@ export async function createGroupNotification(
   title: string,
   message: string,
 ): Promise<number> {
+  const sender = await prisma.user.findUnique({
+    where: { id: senderId },
+    select: { role: true },
+  });
+
+  if (!sender || (sender.role !== "ADMIN" && sender.role !== "STAFF")) {
+    throw new Error("Only Admin or Staff can send notifications");
+  }
+
   const result = await prisma.notification.createMany({
     data: userIds.map((userId) => ({
       userId,

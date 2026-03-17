@@ -48,6 +48,7 @@ async function upsertUser(user: (typeof SEED_USERS)[number]) {
     create: {
       name: user.name,
       nameAr: "nameAr" in user ? (user.nameAr as string) : null,
+      nameEn: user.role === "STUDENT" ? "Saleh Musleh Al-Maslouh" : null,
       email: user.email,
       academicId: user.academicId,
       passwordHash,
@@ -93,7 +94,7 @@ async function seedStudentData(studentId: string, staffId: string) {
   });
   console.log("  📝 Graduation form ready");
 
-  // --- Certificate steps (first 2 completed, 3rd in-progress, 4th pending) ---
+  // --- Certificate steps (5 stages) ---
   const existingSteps = await prisma.certificateStep.findMany({
     where: { userId: studentId },
   });
@@ -106,31 +107,36 @@ async function seedStudentData(studentId: string, staffId: string) {
       updatedById: string | null;
     }[] = [
       {
-        label: "تعبئة الاستمارة",
+        label: "تعبئة استمارة التخرج",
         order: 1,
         status: "COMPLETED",
         updatedById: staffId,
       },
       {
-        label: "التأكد من بيانات الاستمارة",
+        label: "مراجعة البيانات وتأكيدها",
         order: 2,
         status: "COMPLETED",
         updatedById: staffId,
       },
       {
-        label: "ارسال الشهادة للتعليم العالي",
+        label: "اعتماد التخرج",
         order: 3,
         status: "IN_PROGRESS",
         updatedById: staffId,
       },
       {
-        label: "المصادقة على الشهادة",
+        label: "رفع الشهادة للتعليم العالي",
         order: 4,
         status: "PENDING",
         updatedById: null,
       },
+      {
+        label: "المصادقة النهائية",
+        order: 5,
+        status: "PENDING",
+        updatedById: null,
+      },
     ];
-
     await prisma.certificateStep.createMany({
       data: stepData.map((s) => ({ userId: studentId, ...s })),
     });

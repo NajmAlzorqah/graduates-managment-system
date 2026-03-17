@@ -17,27 +17,48 @@ const stepStatusMap = {
   PENDING: "pending",
 } as const;
 
-export async function getStudentsWithCertSteps(): Promise<StudentWithSteps[]> {
+export async function getStudentsWithCertSteps(
+  excludeCompleted = true,
+): Promise<StudentWithSteps[]> {
   const users = await prisma.user.findMany({
     where: { role: "STUDENT", isApproved: true },
     include: {
       studentProfile: true,
+      graduationForm: true,
       certificateSteps: { orderBy: { order: "asc" } },
+      documents: true,
     },
     orderBy: { createdAt: "desc" },
   });
 
-  return users.map((u) => ({
+  const allStudents = users.map((u) => ({
     id: u.id,
     name: u.name,
     nameAr: u.nameAr,
+    nameEn: u.nameEn,
     major: u.studentProfile?.major ?? null,
     steps: u.certificateSteps.map((s) => ({
       id: s.id,
       label: s.label,
       status: stepStatusMap[s.status],
     })),
+    graduationFormSubmitted: !!u.graduationForm,
+    documents: u.documents.map((d) => ({
+      id: d.id,
+      label: d.label,
+      documentType: d.documentType,
+      filePath: d.filePath,
+      status: d.status.toLowerCase(),
+    })),
   }));
+
+  if (excludeCompleted) {
+    return allStudents.filter((s) =>
+      s.steps.some((step) => step.status !== "completed"),
+    );
+  }
+
+  return allStudents;
 }
 
 export async function getStudents(): Promise<Student[]> {
@@ -94,10 +115,11 @@ export async function createStudent(
   const passwordHash = await bcrypt.hash(password, 12);
 
   const defaultStepLabels = [
-    "تعبئة الاستمارة",
-    "التأكد من بيانات الاستمارة",
-    "ارسال الشهادة للتعليم العالي",
-    "المصادقة على الشهادة",
+    "تعبئة استمارة التخرج",
+    "مراجعة البيانات وتأكيدها",
+    "اعتماد التخرج",
+    "رفع الشهادة للتعليم العالي",
+    "المصادقة النهائية",
   ];
 
   const user = await prisma.user.create({

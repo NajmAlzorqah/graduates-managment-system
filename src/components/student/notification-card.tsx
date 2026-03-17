@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Notification } from "@/types/notification";
+import type { NotificationWithUsers } from "@/types/notification";
+import { getNotificationSenderName } from "@/lib/utils";
 
 /** Serialized version of Notification (Date → string across the server/client boundary) */
-export type SerializedNotification = Omit<Notification, "createdAt"> & {
+export type SerializedNotification = Omit<NotificationWithUsers, "createdAt"> & {
   createdAt: string;
 };
 
@@ -136,7 +137,7 @@ export default function NotificationCard({
        */}
       <div className="flex items-center justify-between">
         <p className="font-arabic text-[#ffb755] font-medium text-sm">
-          شؤون الخريجين
+          {getNotificationSenderName(notification.sentBy)}
         </p>
         <p className="text-[#ffb755] font-semibold text-sm tabular-nums">
           {formatDate(notification.createdAt)}

@@ -38,28 +38,45 @@ export default function CertificateStatusCard({
     <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="bg-white rounded-[45px] p-6 mb-6 shadow-sm border border-[#e5e7eb] flex flex-col md:flex-row items-center gap-6"
+      className="bg-[#ffb755] rounded-[35px] p-5 mb-5 shadow-[0_4px_12px_rgba(0,0,0,0.08)] border-none flex flex-col md:flex-row items-center gap-5"
     >
       {/* ── Left side: Buttons ── */}
-      <div className="flex flex-col gap-3 w-full md:w-48 order-3 md:order-1">
-        <button
-          type="button"
-          onClick={() => onViewDetails(student)}
-          className="bg-[#1a3b5c] text-white rounded-[20px] py-3 text-lg font-bold shadow-[inset_0_4px_4px_rgba(0,0,0,0.25)] hover:bg-[#1a3b5c]/90 transition-colors font-arabic"
-        >
-          عرض التفاصيل
-        </button>
+      <div className="flex flex-col gap-2.5 w-full md:w-48 order-3 md:order-1">
+        {student.graduationFormSubmitted && (
+          <button
+            type="button"
+            onClick={() => onViewDetails(student)}
+            className="bg-[#1a3b5c] text-white rounded-[15px] py-2.5 text-lg font-bold shadow-[inset_0_4px_4px_rgba(0,0,0,0.2)] hover:bg-[#1a3b5c]/90 transition-all font-arabic"
+          >
+            عرض التفاصيل
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onUpdateStatus(student)}
-          className="bg-[#1a3b5c] text-white rounded-[20px] py-3 text-lg font-bold shadow-[inset_0_4px_4px_rgba(0,0,0,0.25)] hover:bg-[#1a3b5c]/90 transition-colors font-arabic"
+          className="bg-[#1a3b5c] text-white rounded-[15px] py-2.5 text-lg font-bold shadow-[inset_0_4px_4px_rgba(0,0,0,0.2)] hover:bg-[#1a3b5c]/90 transition-all font-arabic flex items-center justify-center gap-2"
         >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="w-5 h-5"
+          >
+            <path
+              d="M19 9l-7 7-7-7"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           تحديث الحالة
         </button>
       </div>
 
       {/* ── Middle: Progress Tracker ── */}
-      <div className="flex-1 flex items-center justify-center order-2">
+      <div className="flex-1 flex items-center justify-center order-2 py-2">
         <div className="flex items-center">
           {student.steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
@@ -67,9 +84,9 @@ export default function CertificateStatusCard({
               <div
                 title={step.label}
                 className={[
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2",
+                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-[3px]",
                   step.status === "completed"
-                    ? "bg-[#ffb755] border-[#ffb755]"
+                    ? "bg-[#ffb755] border-[#1a3b5c]"
                     : "bg-white border-[#1a3b5c]",
                 ].join(" ")}
               >
@@ -79,7 +96,7 @@ export default function CertificateStatusCard({
               </div>
               {/* Connector line */}
               {index < student.steps.length - 1 && (
-                <div className="h-[2px] w-8 sm:w-16 bg-[#1a3b5c]" />
+                <div className="h-[3px] w-5 sm:w-10 bg-[#1a3b5c]" />
               )}
             </div>
           ))}
@@ -87,17 +104,17 @@ export default function CertificateStatusCard({
       </div>
 
       {/* ── Right side: Info ── */}
-      <div className="flex items-center gap-4 w-full md:w-auto order-1 md:order-3 justify-end text-right">
+      <div className="flex items-center gap-5 w-full md:w-auto order-1 md:order-3 justify-end text-right">
         <div className="flex flex-col items-end">
-          <p className="text-[#1a3b5c] text-2xl font-bold font-arabic leading-tight">
+          <p className="text-[#1a3b5c] text-[22px] font-bold font-arabic leading-tight">
             {student.nameAr || student.name}
           </p>
-          <p className="text-[#1a3b5c]/70 text-xl font-bold font-arabic">
+          <p className="text-[#1a3b5c] text-[18px] font-bold font-arabic opacity-70">
             {student.major}
           </p>
         </div>
-        <div className="w-24 h-24 rounded-full bg-[#e5e7eb] flex items-center justify-center shrink-0 border-4 border-[#ffb755]/30">
-          <User className="w-12 h-12 text-[#1a3b5c]/40" />
+        <div className="w-[80px] h-[80px] rounded-full bg-white flex items-center justify-center shrink-0 border-none shadow-sm overflow-hidden">
+          <User className="w-10 h-10 text-[#1a3b5c]/30" />
         </div>
       </div>
     </motion.div>

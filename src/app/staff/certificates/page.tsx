@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 
 export default async function CertificateStatusPage() {
   const [students, templates] = await Promise.all([
-    getStudentsWithCertSteps(),
+    getStudentsWithCertSteps(true), // Exclude completed
     getNotificationTemplates(),
   ]);
 
   return (
-    <div className="max-w-[1200px] mx-auto">
+    <div className="w-full max-w-[1400px] mx-auto px-2">
       <CertificateStatusList students={students} templates={templates} />
     </div>
   );

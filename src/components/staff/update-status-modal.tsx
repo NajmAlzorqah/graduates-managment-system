@@ -27,12 +27,21 @@ export default function UpdateStatusModal({
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
   const [showNotificationForm, setShowNotificationForm] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    stepId: string;
+    currentStatus: string;
+    label: string;
+  } | null>(null);
 
   if (!student) return null;
 
-  const handleUpdateStatus = async (stepId: string, currentStatus: string) => {
+  const handleUpdateStatus = async () => {
+    if (!pendingAction) return;
+    const { stepId, currentStatus } = pendingAction;
     const nextStatus = currentStatus === "completed" ? "PENDING" : "COMPLETED";
+
     setLoadingStepId(stepId);
+    setPendingAction(null);
 
     const res = await updateStepStatusAction(stepId, nextStatus);
     setLoadingStepId(null);
@@ -49,6 +58,14 @@ export default function UpdateStatusModal({
     } else {
       toast.error(res.error || "فشل في تحديث الحالة");
     }
+  };
+
+  const initiateUpdate = (
+    stepId: string,
+    currentStatus: string,
+    label: string,
+  ) => {
+    setPendingAction({ stepId, currentStatus, label });
   };
 
   const handleSendNotification = async () => {
@@ -117,55 +134,103 @@ export default function UpdateStatusModal({
                 <p className="text-[#1a3b5c]/70 font-bold">{student.major}</p>
               </div>
 
-              {/* Steps List */}
+              {/* Steps List or Confirmation */}
               <div className="space-y-4 mb-8" dir="rtl">
-                <h3 className="text-xl font-bold text-[#1a3b5c] mb-4">
-                  خطوات الشهادة
-                </h3>
-                {student.steps.map((step) => (
-                  <div
-                    key={step.id}
-                    className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-transparent hover:border-[#ffb755]/50 transition-all"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={[
-                          "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2",
-                          step.status === "completed"
-                            ? "bg-[#ffb755] border-[#ffb755]"
-                            : "bg-white border-[#1a3b5c]",
-                        ].join(" ")}
-                      >
-                        {step.status === "completed" && (
-                          <CheckCircle2 className="w-6 h-6 text-[#1a3b5c]" />
-                        )}
-                      </div>
-                      <span className="text-[#1a3b5c] font-bold text-lg">
-                        {step.label}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStatus(step.id, step.status)}
-                      disabled={loadingStepId === step.id}
-                      className={[
-                        "px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 shadow-sm",
-                        step.status === "completed"
-                          ? "bg-red-50 text-red-600 hover:bg-red-100"
-                          : "bg-[#1a3b5c] text-white hover:bg-[#1a3b5c]/90",
-                      ].join(" ")}
+                <AnimatePresence mode="wait">
+                  {pendingAction ? (
+                    <motion.div
+                      key="confirmation"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="bg-white rounded-3xl p-8 shadow-sm border-2 border-[#ffb755] text-center"
                     >
-                      {loadingStepId === step.id ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : step.status === "completed" ? (
-                        "تراجع"
-                      ) : (
-                        "اعتماد"
-                      )}
-                    </button>
-                  </div>
-                ))}
+                      <h3 className="text-2xl font-bold text-[#1a3b5c] mb-4">
+                        هل أنت متأكد؟
+                      </h3>
+                      <p className="text-lg text-[#1a3b5c]/70 mb-8">
+                        أنت على وشك تحديث حالة خطوة{" "}
+                        <strong>"{pendingAction.label}"</strong>. سيتم إرسال
+                        إشعار تلقائي للطالب عند الاعتماد.
+                      </p>
+                      <div className="flex gap-4">
+                        <button
+                          type="button"
+                          onClick={handleUpdateStatus}
+                          className="flex-1 bg-[#1a3b5c] text-white font-bold py-4 rounded-2xl hover:bg-[#1a3b5c]/90 transition-all shadow-lg"
+                        >
+                          نعم، تأكيد التحديث
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingAction(null)}
+                          className="flex-1 bg-[#f3f4f6] text-[#1a3b5c] font-bold py-4 rounded-2xl hover:bg-gray-200 transition-all"
+                        >
+                          إلغاء
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="list"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                    >
+                      <h3 className="text-xl font-bold text-[#1a3b5c] mb-4">
+                        خطوات الشهادة
+                      </h3>
+                      <div className="space-y-4">
+                        {student.steps.map((step) => (
+                          <div
+                            key={step.id}
+                            className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-transparent hover:border-[#ffb755]/50 transition-all"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div
+                                className={[
+                                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2",
+                                  step.status === "completed"
+                                    ? "bg-[#ffb755] border-[#1a3b5c]"
+                                    : "bg-white border-[#1a3b5c]",
+                                ].join(" ")}
+                              >
+                                {step.status === "completed" && (
+                                  <CheckCircle2 className="w-6 h-6 text-[#1a3b5c]" />
+                                )}
+                              </div>
+                              <span className="text-[#1a3b5c] font-bold text-lg">
+                                {step.label}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                initiateUpdate(step.id, step.status, step.label)
+                              }
+                              disabled={loadingStepId === step.id}
+                              className={[
+                                "px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 shadow-sm",
+                                step.status === "completed"
+                                  ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                  : "bg-[#1a3b5c] text-white hover:bg-[#1a3b5c]/90",
+                              ].join(" ")}
+                            >
+                              {loadingStepId === step.id ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : step.status === "completed" ? (
+                                "تراجع"
+                              ) : (
+                                "اعتماد"
+                              )}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Notification Section */}

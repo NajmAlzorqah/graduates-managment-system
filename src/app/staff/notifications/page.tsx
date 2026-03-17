@@ -1,16 +1,26 @@
-import { getNotifications } from "@/lib/api/notifications";
-import { getStudents } from "@/lib/api/students";
+import { auth } from "@/lib/auth";
+import {
+  getIncomingNotifications,
+  getOutgoingNotifications,
+} from "@/lib/api/notifications";
+import { redirect } from "next/navigation";
 import NotificationsPageClient from "./client-page";
 
 export default async function StaffNotificationsPage() {
-  // This is not ideal, we should fetch notifications for the staff member
-  // but the current API doesn't support that.
-  // We will fetch all students and all notifications for now.
-  const students = await getStudents();
-  const allNotifications = await Promise.all(
-    students.map((s) => getNotifications(s.id)),
-  );
-  const notifications = allNotifications.flat();
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
 
-  return <NotificationsPageClient notifications={notifications} />;
+  const [incoming, outgoing] = await Promise.all([
+    getIncomingNotifications(session.user.id),
+    getOutgoingNotifications(session.user.id),
+  ]);
+
+  return (
+    <NotificationsPageClient
+      incomingNotifications={incoming}
+      outgoingNotifications={outgoing}
+    />
+  );
 }
