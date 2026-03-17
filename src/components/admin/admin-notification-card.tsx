@@ -8,24 +8,51 @@ import {
   deleteAllNotificationsAction,
   deleteNotificationAction,
 } from "@/lib/actions/staff-notifications";
+import {
+  getNotificationRecipientName,
+  getNotificationSenderName,
+} from "@/lib/utils";
 import type { NotificationWithUsers } from "@/types/notification";
 
 type AdminNotificationCardProps = {
   notification: NotificationWithUsers;
 };
 
+function ThreeDotsIcon() {
+  return (
+    <svg
+      width="10"
+      height="39"
+      viewBox="0 0 10 39"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="text-white/80"
+      role="img"
+      aria-label="Actions"
+    >
+      <title>Actions</title>
+      <circle cx="5" cy="5" r="5" fill="currentColor" />
+      <circle cx="5" cy="19.5" r="5" fill="currentColor" />
+      <circle cx="5" cy="34" r="5" fill="currentColor" />
+    </svg>
+  );
+}
+
 export default function AdminNotificationCard({
   notification,
 }: AdminNotificationCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (confirm("هل أنت متأكد من حذف هذا الإشعار؟")) {
+      setIsDeleting(true);
       const result = await deleteNotificationAction(notification.id);
       if (result.success) {
         toast.success("تم حذف الإشعار");
       } else {
         toast.error(result.error);
+        setIsDeleting(false);
       }
     }
     setIsMenuOpen(false);
@@ -47,37 +74,30 @@ export default function AdminNotificationCard({
     setIsMenuOpen(false);
   };
 
-  const senderName =
-    notification.sentBy?.role === "ADMIN"
-      ? "رئاسة الجامعة"
-      : notification.sentBy?.role === "STAFF"
-        ? "شؤون الخريجين"
-        : (notification.sentBy?.nameAr ?? "النظام");
-
-  const recipientName =
-    notification.user.role === "ADMIN"
-      ? "رئاسة الجامعة"
-      : notification.user.role === "STAFF"
-        ? "شؤون الخريجين"
-        : (notification.user.nameAr ?? "طالب");
+  const senderName = getNotificationSenderName(notification.sentBy);
+  const recipientName = getNotificationRecipientName(notification.user);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative flex w-full flex-col overflow-hidden rounded-[24px] bg-[#ffb755] shadow-lg md:rounded-[30px]"
+      className={`relative flex w-full flex-col overflow-hidden rounded-[24px] bg-[#ffb755] shadow-lg md:rounded-[30px] ${isDeleting ? "opacity-50 grayscale" : ""}`}
     >
       {/* Title Header - White font on slightly darker orange */}
-      <div className="flex items-center justify-between bg-[#f39c12] px-6 py-4 md:px-8">
-        {/* Three-dots Menu */}
+      <div className="flex items-center justify-between bg-[#f39c12] px-6 py-4 md:px-8" dir="rtl">
+        <h3 className="text-right text-[22px] font-bold text-white md:text-[26px]">
+          {notification.title}
+        </h3>
+
+        {/* Three-dots Menu - Left side visually in RTL */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex size-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/20 active:bg-white/40"
+            className="flex h-12 w-8 items-center justify-center rounded-full text-white transition-colors hover:bg-white/20 active:bg-white/40"
             aria-label="Actions"
           >
-            <MoreHorizontal className="size-8" />
+            <ThreeDotsIcon />
           </button>
 
           <AnimatePresence>
@@ -99,17 +119,10 @@ export default function AdminNotificationCard({
                     type="button"
                     className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-right text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
                     onClick={handleDelete}
+                    disabled={isDeleting}
                   >
                     <Trash2 className="size-5" />
-                    <span>Delete for me</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-right text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
-                    onClick={handleDelete}
-                  >
-                    <UserX className="size-5" />
-                    <span>Delete for all</span>
+                    <span>حذف الإشعار</span>
                   </button>
                   <button
                     type="button"
@@ -117,17 +130,13 @@ export default function AdminNotificationCard({
                     onClick={handleClearAll}
                   >
                     <XCircle className="size-5" />
-                    <span>Clear all notifications</span>
+                    <span>مسح جميع الإشعارات</span>
                   </button>
                 </motion.div>
               </>
             )}
           </AnimatePresence>
         </div>
-
-        <h3 className="text-right text-[22px] font-bold text-white md:text-[26px]">
-          {notification.title}
-        </h3>
       </div>
 
       <div className="flex flex-col p-6 md:p-8">

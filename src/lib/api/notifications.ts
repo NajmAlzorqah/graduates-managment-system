@@ -111,14 +111,15 @@ export async function getNotificationsWithUsers(): Promise<
 
   for (const key in groups) {
     const group = groups[key];
-    if (group.length >= totalStudents && totalStudents > 0) {
-      // This was sent to all
+    if (group.length > 1) {
       const base = group[0];
+      const isAll = group.length >= totalStudents && totalStudents > 0;
+      
       result.push({
         ...base,
         user: {
-          nameAr: "الكل (Sent to all)",
-          role: "ALL",
+          nameAr: isAll ? "الكل (Sent to all)" : `مجموعة (${group.length} طلاب)`,
+          role: isAll ? "ALL" : "GROUP",
         },
       });
     } else {

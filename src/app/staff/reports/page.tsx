@@ -35,6 +35,7 @@ export default async function StaffReportsPage() {
     return {
       id: student.id,
       fullName: basicInfo?.nameAr ?? basicInfo?.name ?? student.name,
+      name: basicInfo?.name ?? student.name ?? "-",
       email: student.email,
       academicId: student.academicId,
       department: basicInfo?.major ?? (student.department || "-"),

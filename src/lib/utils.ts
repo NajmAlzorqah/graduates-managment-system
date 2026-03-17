@@ -13,6 +13,8 @@ export function getNotificationSenderName(sentBy: { nameAr: string | null; role:
 }
 
 export function getNotificationRecipientName(user: { nameAr: string | null; role: string }) {
+  if (user.role === "ALL") return user.nameAr || "الكل";
+  if (user.role === "GROUP") return user.nameAr || "مجموعة";
   if (user.role === "STUDENT") return user.nameAr || "طالب";
   if (user.role === "STAFF" || user.role === "ADMIN") return "شؤون الخريجين";
   return user.nameAr || "شؤون الخريجين";

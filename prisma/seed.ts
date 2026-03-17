@@ -46,9 +46,8 @@ async function upsertUser(user: (typeof SEED_USERS)[number]) {
     where: { academicId: user.academicId },
     update: {},
     create: {
-      name: user.name,
       nameAr: "nameAr" in user ? (user.nameAr as string) : null,
-      nameEn: user.role === "STUDENT" ? "Saleh Musleh Al-Maslouh" : null,
+      name: user.role === "STUDENT" ? "Saleh Musleh Al-Maslouh" : user.name,
       email: user.email,
       academicId: user.academicId,
       passwordHash,

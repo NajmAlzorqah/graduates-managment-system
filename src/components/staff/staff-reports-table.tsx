@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 export type StaffReportRow = {
   id: string;
   fullName: string;
+  name: string;
   email: string;
   academicId: string;
   department: string;
@@ -19,7 +20,8 @@ type StaffReportsTableProps = {
 };
 
 const TABLE_HEADERS = [
-  "الاسم الكامل",
+  "الاسم (Ar)",
+  "الاسم (En)",
   "البريد الالكتروني",
   "الرقم الاكاديمي",
   "التخصص",
@@ -70,16 +72,18 @@ function ChevronDownIcon() {
 
 function exportCsv(rows: StaffReportRow[]): void {
   const header = [
-    "full_name",
-    "email",
-    "academic_id",
-    "department",
-    "graduation_year",
-    "certificate_status",
+    "الاسم (Ar)",
+    "الاسم (En)",
+    "البريد الالكتروني",
+    "الرقم الاكاديمي",
+    "التخصص",
+    "سنة التخرج",
+    "حالة الشهادة",
   ];
 
   const dataRows = rows.map((row) => [
     row.fullName,
+    row.name,
     row.email,
     row.academicId,
     row.department,
@@ -122,6 +126,7 @@ function openPrintWindow(rows: StaffReportRow[]): void {
       (row) => `
         <tr>
           <td>${row.fullName}</td>
+          <td>${row.name}</td>
           <td>${row.email}</td>
           <td>${row.academicId}</td>
           <td>${row.department}</td>
@@ -152,7 +157,8 @@ function openPrintWindow(rows: StaffReportRow[]): void {
         <table>
           <thead>
             <tr>
-              <th>الاسم الكامل</th>
+              <th>الاسم (Ar)</th>
+              <th>الاسم (En)</th>
               <th>البريد الالكتروني</th>
               <th>الرقم الاكاديمي</th>
               <th>التخصص</th>
@@ -359,6 +365,9 @@ export default function StaffReportsTable({ rows }: StaffReportsTableProps) {
                     <td className="rounded-r-full px-4 text-center text-base font-medium leading-tight">
                       {row.fullName}
                     </td>
+                    <td className="px-4 text-center text-base font-medium leading-tight">
+                      {row.name}
+                    </td>
                     <td className="px-4 text-center text-sm font-normal break-all">
                       {row.email}
                     </td>
@@ -392,6 +401,7 @@ export default function StaffReportsTable({ rows }: StaffReportsTableProps) {
                   className="rounded-[20px] bg-[#f6b651] p-3 text-[#133456] shadow-[0_4px_10px_rgba(0,0,0,0.15)]"
                 >
                   <p className="text-base font-bold">{row.fullName}</p>
+                  <p className="text-sm font-medium">{row.name}</p>
                   <p className="mt-1 text-sm break-all">{row.email}</p>
                   <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
                     <p>

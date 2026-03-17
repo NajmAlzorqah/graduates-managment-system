@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
-import SendNotificationScreen from "@/components/admin/send-notification-screen";
-import { getNotificationTemplates } from "@/lib/api/notification-templates";
-import { getStaffUsers } from "@/lib/api/students";
+import NotificationForm from "@/components/notifications/notification-form";
+import { getStudentsBasicInfo } from "@/lib/api/students";
 import { auth } from "@/lib/auth";
 
 export default async function AdminNewNotificationPage() {
@@ -15,15 +14,13 @@ export default async function AdminNewNotificationPage() {
     redirect("/");
   }
 
-  const [staffUsers, templates] = await Promise.all([
-    getStaffUsers(),
-    getNotificationTemplates(),
-  ]);
+  const students = await getStudentsBasicInfo();
 
   return (
-    <SendNotificationScreen
-      staffUsers={staffUsers}
-      initialTemplates={templates}
+    <NotificationForm 
+      students={students} 
+      backLink="/admin/notifications" 
+      role="ADMIN" 
     />
   );
 }

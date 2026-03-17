@@ -64,18 +64,31 @@ export default function NotificationsList({
   const [notifications, setNotifications] =
     useState<SerializedNotification[]>(initialNotifications);
   const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "unread" | "read">("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Modal state
   const [selectedNotification, setSelectedNotification] =
     useState<SerializedNotification | null>(null);
 
-  const filtered =
-    search.trim() === ""
-      ? notifications
-      : notifications.filter(
-          (n) => n.title.includes(search) || n.message.includes(search),
-        );
+  const filtered = notifications.filter((n) => {
+    // Search filter
+    const matchesSearch = n.title.includes(search) || n.message.includes(search);
+    if (!matchesSearch) return false;
+
+    // Type filter
+    if (filterType === "unread") return !n.isRead;
+    if (filterType === "read") return n.isRead;
+
+    return true;
+  });
+
+  const filterLabels = {
+    all: "الكل",
+    unread: "غير مقروء",
+    read: "مقروء"
+  };
 
   function handleMarkRead(id: string) {
     const notif = notifications.find((n) => n.id === id);
@@ -118,16 +131,46 @@ export default function NotificationsList({
       </h1>
 
       {/* Filter + Search row — LTR layout: filter button on left, search on right */}
-      <div className="flex items-center gap-3 px-4 pb-5">
+      <div className="flex items-center gap-3 px-4 pb-5 relative z-20">
         {/* Filter button (left) */}
-        <button
-          type="button"
-          className="flex items-center gap-1 bg-[#ffb755] text-white font-arabic font-bold text-sm px-4 py-2 rounded-full flex-shrink-0 shadow-sm"
-          aria-label="تصفية الإشعارات"
-        >
-          <ChevronDownIcon />
-          <span>الكل</span>
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="flex items-center gap-2 bg-[#ffb755] text-white font-arabic font-bold text-sm px-4 py-2 rounded-full flex-shrink-0 shadow-sm min-w-[100px] justify-between transition-all active:scale-95"
+            aria-label="تصفية الإشعارات"
+          >
+            <div className={`transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`}>
+              <ChevronDownIcon />
+            </div>
+            <span>{filterLabels[filterType]}</span>
+          </button>
+
+          {isFilterOpen && (
+            <>
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setIsFilterOpen(false)}
+              />
+              <div className="absolute top-full left-0 mt-2 w-36 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
+                {(["all", "unread", "read"] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setFilterType(type);
+                      setIsFilterOpen(false);
+                    }}
+                    className={`w-full text-right px-4 py-2.5 font-arabic font-bold text-sm transition-colors hover:bg-gray-50 ${
+                      filterType === type ? "text-[#ffb755]" : "text-[#1a3b5c]"
+                    }`}
+                  >
+                    {filterLabels[type]}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Search input (right) */}
         <div className="relative flex-1">

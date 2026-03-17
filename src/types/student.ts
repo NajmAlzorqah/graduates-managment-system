@@ -26,7 +26,7 @@ export type StudentWithProfile = {
 export type CertificateStep = {
   id: string;
   label: string;
-  status: "completed" | "in-progress" | "pending";
+  status: "completed" | "in-progress" | "pending" | "needs-verification" | "modified" | "rejected";
 };
 
 export type DocumentItem = {
@@ -51,7 +51,6 @@ export type StudentWithSteps = {
   id: string;
   name: string | null;
   nameAr: string | null;
-  nameEn: string | null;
   major: string | null;
   steps: CertificateStep[];
   graduationFormSubmitted: boolean;

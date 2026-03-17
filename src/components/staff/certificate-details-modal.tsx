@@ -84,7 +84,7 @@ export default function CertificateDetailsModal({
                         الاسم بالإنجليزي (حسب الجواز)
                       </p>
                       <p className="text-xl font-bold text-[#1a3b5c]">
-                        {student.nameEn || student.name || "غير متوفر"}
+                        {student.name || "غير متوفر"}
                       </p>
                     </div>
                     <div>

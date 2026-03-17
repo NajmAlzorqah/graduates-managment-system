@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { NotificationWithUsers } from "@/types/notification";
 import { getNotificationSenderName } from "@/lib/utils";
+import { Trash2 } from "lucide-react";
 
 /** Serialized version of Notification (Date → string across the server/client boundary) */
 export type SerializedNotification = Omit<NotificationWithUsers, "createdAt"> & {
@@ -18,15 +19,19 @@ type NotificationCardProps = {
 function ThreeDotsIcon() {
   return (
     <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="currentColor"
-      aria-hidden="true"
+      width="10"
+      height="30"
+      viewBox="0 0 10 39"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="text-[#1a3b5c]/40 hover:text-[#1a3b5c] transition-colors"
+      role="img"
+      aria-label="Actions"
     >
-      <circle cx="9" cy="3" r="1.6" />
-      <circle cx="9" cy="9" r="1.6" />
-      <circle cx="9" cy="15" r="1.6" />
+      <title>Actions</title>
+      <circle cx="5" cy="5" r="5" fill="currentColor" />
+      <circle cx="5" cy="19.5" r="5" fill="currentColor" />
+      <circle cx="5" cy="34" r="5" fill="currentColor" />
     </svg>
   );
 }
@@ -64,10 +69,6 @@ export default function NotificationCard({
       className="bg-white rounded-[20px] px-4 pt-3 pb-4 shadow-[inset_0px_4px_4px_rgba(0,0,0,0.25)]"
       dir="rtl"
     >
-      {/*
-       * RTL flex-row: logical start → physical right, logical end → physical left
-       * DOM order: title (start = right) :: three-dot button (end = left)
-       */}
       <div className="flex items-start justify-between mb-2">
         <p className="font-arabic font-bold text-lg text-[#ffb755] leading-snug">
           {notification.title}
@@ -75,7 +76,7 @@ export default function NotificationCard({
         <div className="relative" ref={menuRef}>
           <button
             type="button"
-            className="text-[#1a3b5c]/40 hover:text-[#1a3b5c] transition-colors flex-shrink-0 p-1"
+            className="flex-shrink-0 p-1 active:scale-90 transition-transform"
             aria-label="خيارات الإشعار"
             aria-expanded={showMenu}
             onClick={() => setShowMenu((prev) => !prev)}
@@ -90,26 +91,15 @@ export default function NotificationCard({
                 className="w-full flex items-center justify-between px-3 py-2 text-red-500 hover:bg-gray-50 transition-colors gap-2"
                 onClick={() => {
                   setShowMenu(false);
-                  onDismiss(notification.id);
+                  if (confirm("هل أنت متأكد من حذف هذا الإشعار؟")) {
+                    onDismiss(notification.id);
+                  }
                 }}
               >
                 <span className="font-arabic font-semibold text-[15px]">
                   حذف
                 </span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 6h18"></path>
-                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                </svg>
+                <Trash2 className="size-4" />
               </button>
             </div>
           )}

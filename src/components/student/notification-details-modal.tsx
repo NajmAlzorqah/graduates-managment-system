@@ -22,7 +22,7 @@ export default function NotificationDetailsModal({
   // Example pre-filled data based on Figma mockup
   const [formData, setFormData] = useState({
     nameAr: "صالح مصلح المصلوحي",
-    nameEn: "Saleh Mosleh Almaslohy",
+    name: "Saleh Mosleh Almaslohy",
     major: "IT",
     studentCardNumber: "20210001", // Required by backend API
     graduationYear: new Date().getFullYear(), // Required by backend API
@@ -172,8 +172,8 @@ export default function NotificationDetailsModal({
                 {isEditing ? (
                   <input
                     type="text"
-                    name="nameEn"
-                    value={formData.nameEn}
+                    name="name"
+                    value={formData.name}
                     onChange={handleInputChange}
                     dir="ltr"
                     className="w-full bg-white rounded-lg p-3 border-2 border-[#1a3b5c]/20 focus:border-[#ffb755] focus:outline-none transition-colors text-[#1a3b5c] font-medium font-sans min-h-[50px]"
@@ -183,7 +183,7 @@ export default function NotificationDetailsModal({
                     className="w-full bg-gray-50 rounded-lg p-3 border border-gray-200 text-[#1a3b5c] font-medium font-sans min-h-[50px] flex items-center"
                     dir="ltr"
                   >
-                    {formData.nameEn}
+                    {formData.name}
                   </div>
                 )}
               </div>

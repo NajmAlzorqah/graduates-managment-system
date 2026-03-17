@@ -53,6 +53,7 @@ export async function getReports(
     return {
       id: u.id,
       nameAr: u.nameAr,
+      name: u.name,
       email: u.email,
       academicId: u.academicId,
       major: u.studentProfile?.major ?? null,

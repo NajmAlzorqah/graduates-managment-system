@@ -15,6 +15,7 @@ export type AdminHomeData = {
 
 export type StudentReport = {
   id: string;
+  name: string | null;
   nameAr: string | null;
   email: string;
   academicId: string;

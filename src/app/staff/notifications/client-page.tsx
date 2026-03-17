@@ -73,16 +73,71 @@ export default function NotificationsPageClient({
     "outgoing",
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "individual" | "group">("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const filteredNotifications = (
-    activeTab === "incoming" ? incomingNotifications : outgoingNotifications
-  ).filter(
-    (n) =>
-      n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.user.nameAr?.includes(searchQuery) ||
-      n.sentBy?.nameAr?.includes(searchQuery),
-  );
+  // Grouping logic for "Group" notifications in outgoing tab
+  const getFilteredAndGrouped = () => {
+    const base = activeTab === "incoming" ? incomingNotifications : outgoingNotifications;
+    
+    // Filter by search query first
+    let filtered = base.filter(
+      (n) =>
+        n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        n.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        n.user.nameAr?.includes(searchQuery) ||
+        n.sentBy?.nameAr?.includes(searchQuery),
+    );
+
+    if (activeTab === "outgoing") {
+      // Group by (title, message, createdAt_rounded) to detect group notifications
+      const groups: Record<string, NotificationWithUsers[]> = {};
+      filtered.forEach(n => {
+        const timeKey = new Date(n.createdAt).getTime();
+        // Allow 2 second window for group creation
+        const roundedTime = Math.floor(timeKey / 2000);
+        const key = `${n.title}|${n.message}|${roundedTime}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(n);
+      });
+
+      const groupedResult: (NotificationWithUsers & { isGroup?: boolean; count?: number })[] = [];
+      Object.values(groups).forEach(group => {
+        if (group.length > 1) {
+          groupedResult.push({
+            ...group[0],
+            isGroup: true,
+            count: group.length,
+            user: { 
+              ...group[0].user, 
+              nameAr: `مجموعة (${group.length} طلاب)`,
+              role: "GROUP"
+            }
+          });
+        } else {
+          groupedResult.push(group[0]);
+        }
+      });
+
+      // Filter by type
+      if (filterType === "individual") {
+        return groupedResult.filter(n => !n.isGroup);
+      } else if (filterType === "group") {
+        return groupedResult.filter(n => n.isGroup);
+      }
+      return groupedResult;
+    }
+
+    return filtered;
+  };
+
+  const displayNotifications = getFilteredAndGrouped();
+
+  const filterLabels = {
+    all: "All",
+    individual: "Individual",
+    group: "Group"
+  };
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -113,14 +168,51 @@ export default function NotificationsPageClient({
                 send new
               </button>
             </Link>
-            <div className="relative group">
+            
+            {/* Dynamic Filter Dropdown */}
+            <div className="relative">
               <button
                 type="button"
-                className="h-12 px-6 rounded-full bg-[#ffb755] text-white text-lg font-bold flex items-center gap-2 shadow-md hover:bg-[#ffa030] transition-colors"
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="h-12 px-6 rounded-full bg-[#ffb755] text-white text-lg font-bold flex items-center gap-2 shadow-md hover:bg-[#ffa030] transition-colors min-w-[140px] justify-between"
               >
-                All
-                <ChevronDownIcon />
+                <span>{filterLabels[filterType]}</span>
+                <div className={`transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`}>
+                  <ChevronDownIcon />
+                </div>
               </button>
+
+              <AnimatePresence>
+                {isFilterOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setIsFilterOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-20 overflow-hidden"
+                    >
+                      {(["all", "individual", "group"] as const).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => {
+                            setFilterType(type);
+                            setIsFilterOpen(false);
+                          }}
+                          className={`w-full text-left px-6 py-3 text-lg font-bold transition-colors hover:bg-gray-50 ${
+                            filterType === type ? "text-[#ffb755]" : "text-[#1a3b5c]"
+                          }`}
+                        >
+                          {filterLabels[type]}
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -165,8 +257,8 @@ export default function NotificationsPageClient({
       {/* Notifications List */}
       <div className="grid grid-cols-1 gap-6">
         <AnimatePresence mode="popLayout">
-          {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((notification) => (
+          {displayNotifications.length > 0 ? (
+            displayNotifications.map((notification) => (
               <StaffNotificationCard
                 key={notification.id}
                 notification={notification}

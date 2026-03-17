@@ -10,7 +10,8 @@ type AdminReportsTableProps = {
 };
 
 const TABLE_HEADERS = [
-  "الاسم الكامل",
+  "الاسم (Ar)",
+  "الاسم (En)",
   "البريد الالكتروني",
   "الرقم الاكاديمي",
   "التخصص",
@@ -61,7 +62,8 @@ function ChevronDownIcon() {
 
 function exportCsv(rows: StudentReport[]): void {
   const header = [
-    "الاسم الكامل",
+    "الاسم (Ar)",
+    "الاسم (En)",
     "البريد الالكتروني",
     "الرقم الاكاديمي",
     "التخصص",
@@ -71,6 +73,7 @@ function exportCsv(rows: StudentReport[]): void {
 
   const dataRows = rows.map((row) => [
     row.nameAr || "",
+    row.name || "",
     row.email,
     row.academicId,
     row.major || "",
@@ -113,6 +116,7 @@ function openPrintWindow(rows: StudentReport[]): void {
       (row) => `
         <tr>
           <td>${row.nameAr || ""}</td>
+          <td>${row.name || ""}</td>
           <td>${row.email}</td>
           <td>${row.academicId}</td>
           <td>${row.major || ""}</td>
@@ -143,7 +147,8 @@ function openPrintWindow(rows: StudentReport[]): void {
         <table>
           <thead>
             <tr>
-              <th>الاسم الكامل</th>
+              <th>الاسم (Ar)</th>
+              <th>الاسم (En)</th>
               <th>البريد الالكتروني</th>
               <th>الرقم الاكاديمي</th>
               <th>التخصص</th>
@@ -354,6 +359,9 @@ export default function AdminReportsTable({ rows }: AdminReportsTableProps) {
                     <td className="rounded-r-full px-4 text-center text-lg font-bold leading-tight">
                       {row.nameAr || "---"}
                     </td>
+                    <td className="px-4 text-center text-lg font-bold leading-tight">
+                      {row.name || "---"}
+                    </td>
                     <td className="px-4 text-center text-base font-medium">
                       {row.email}
                     </td>
@@ -387,6 +395,7 @@ export default function AdminReportsTable({ rows }: AdminReportsTableProps) {
                   className="rounded-[24px] bg-[#f6b651] p-4 text-[#1a3b5c] shadow-[0_4px_10px_rgba(0,0,0,0.1)]"
                 >
                   <p className="text-lg font-bold">{row.nameAr || "---"}</p>
+                  <p className="text-base font-semibold">{row.name || "---"}</p>
                   <p className="mt-1 text-base break-all">{row.email}</p>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                     <p>

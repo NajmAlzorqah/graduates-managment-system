@@ -7,39 +7,32 @@ datasource db {
   provider = "postgresql"
 }
 
-// ─── Auth.js Models ──────────────────────────────────────────────
-
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  nameEn        String?
-  email         String    @unique
-  academicId    String    @unique
-  passwordHash  String
-  nameAr        String?
-  isApproved    Boolean   @default(false)
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(STUDENT)
-  accounts      Account[]
-  sessions      Session[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Domain relations
-  studentProfile       StudentProfile?
-  graduationForm       GraduationForm?
-  documents            Document[]         @relation("StudentDocuments")
-  certificateSteps     CertificateStep[]  @relation("StudentSteps")
-  notifications        Notification[]     @relation("UserNotifications")
+  id                   String            @id @default(cuid())
+  name                 String?
+  email                String            @unique
+  academicId           String            @unique
+  passwordHash         String
+  nameAr               String?
+  isApproved           Boolean           @default(false)
+  emailVerified        DateTime?
+  image                String?
+  role                 Role              @default(STUDENT)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  accounts             Account[]
+  uploadedCertificates Certificate[]     @relation("CertificateUploader")
   certificate          Certificate?
-
-  // Staff/Admin relations
-  reviewedDocuments    Document[]         @relation("DocumentReviewer")
-  reviewedForms        GraduationForm[]   @relation("FormReviewer")
-  updatedSteps         CertificateStep[]  @relation("StepUpdater")
-  sentNotifications    Notification[]     @relation("NotificationSender")
-  uploadedCertificates Certificate[]      @relation("CertificateUploader")
+  updatedSteps         CertificateStep[] @relation("StepUpdater")
+  certificateSteps     CertificateStep[] @relation("StudentSteps")
+  reviewedDocuments    Document[]        @relation("DocumentReviewer")
+  documents            Document[]        @relation("StudentDocuments")
+  reviewedForms        GraduationForm[]  @relation("FormReviewer")
+  graduationForm       GraduationForm?
+  sentNotifications    Notification[]    @relation("NotificationSender")
+  notifications        Notification[]    @relation("UserNotifications")
+  sessions             Session[]
+  studentProfile       StudentProfile?
 }
 
 model Account {
@@ -65,9 +58,9 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -78,7 +71,109 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-// ─── Enums ───────────────────────────────────────────────────────
+model StudentProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  studentCardNumber String?
+  major             String?
+  graduationYear    Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  gpa               Float?
+  nationalId        String?
+  phone             String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GraduationForm {
+  id           String               @id @default(cuid())
+  userId       String               @unique
+  status       GraduationFormStatus @default(DRAFT)
+  submittedAt  DateTime?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  reviewer     User?                @relation("FormReviewer", fields: [reviewedById], references: [id])
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Document {
+  id              String         @id @default(cuid())
+  userId          String
+  documentType    DocumentType
+  label           String
+  fileName        String
+  filePath        String
+  fileSize        Int
+  mimeType        String
+  status          DocumentStatus @default(PENDING)
+  reviewedById    String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  reviewer        User?          @relation("DocumentReviewer", fields: [reviewedById], references: [id])
+  user            User           @relation("StudentDocuments", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CertificateStep {
+  id                  String     @id @default(cuid())
+  userId              String
+  label               String
+  order               Int
+  status              StepStatus @default(PENDING)
+  updatedById         String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  isModifiedByStudent Boolean    @default(false)
+  updatedBy           User?      @relation("StepUpdater", fields: [updatedById], references: [id])
+  user                User       @relation("StudentSteps", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, order])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  sentById  String?
+  createdAt DateTime @default(now())
+  sentBy    User?    @relation("NotificationSender", fields: [sentById], references: [id])
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Certificate {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  fileName     String
+  filePath     String
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  uploadedBy   User?    @relation("CertificateUploader", fields: [uploadedById], references: [id])
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  type      String
+  name      String
+  value     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+}
 
 enum Role {
   STUDENT
@@ -112,106 +207,7 @@ enum StepStatus {
   PENDING
   IN_PROGRESS
   COMPLETED
-}
-
-// ─── Domain Models ───────────────────────────────────────────────
-
-model StudentProfile {
-  id                String @id @default(cuid())
-  userId            String @unique
-  studentCardNumber String?
-  major             String?
-  graduationYear    Int?
-  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-
-model GraduationForm {
-  id           String               @id @default(cuid())
-  userId       String               @unique
-  status       GraduationFormStatus @default(DRAFT)
-  submittedAt  DateTime?
-  reviewedById String?
-  reviewedAt   DateTime?
-  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviewer     User?                @relation("FormReviewer", fields: [reviewedById], references: [id])
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-}
-
-model Document {
-  id              String         @id @default(cuid())
-  userId          String
-  documentType    DocumentType
-  label           String
-  fileName        String
-  filePath        String
-  fileSize        Int
-  mimeType        String
-  status          DocumentStatus @default(PENDING)
-  reviewedById    String?
-  reviewedAt      DateTime?
-  rejectionReason String?
-  user            User           @relation("StudentDocuments", fields: [userId], references: [id], onDelete: Cascade)
-  reviewer        User?          @relation("DocumentReviewer", fields: [reviewedById], references: [id])
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-}
-
-model CertificateStep {
-  id          String     @id @default(cuid())
-  userId      String
-  label       String
-  order       Int
-  status      StepStatus @default(PENDING)
-  updatedById String?
-  user        User       @relation("StudentSteps", fields: [userId], references: [id], onDelete: Cascade)
-  updatedBy   User?      @relation("StepUpdater", fields: [updatedById], references: [id])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@unique([userId, order])
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  message   String
-  isRead    Boolean  @default(false)
-  sentById  String?
-  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
-  sentBy    User?    @relation("NotificationSender", fields: [sentById], references: [id])
-  createdAt DateTime @default(now())
-}
-
-model NotificationTemplate {
-  id        String   @id @default(cuid())
-  title     String
-  message   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Certificate {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  fileName     String
-  filePath     String
-  uploadedById String?
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  uploadedBy   User?    @relation("CertificateUploader", fields: [uploadedById], references: [id])
-  createdAt    DateTime @default(now())
-}
-
-model Analytics {
-  id        String   @id @default(cuid())
-  type      String   // "TRAFFIC_SOURCE", "LOCATION", "DEVICE"
-  name      String   // e.g., "Google", "United States", "Windows"
-  value     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([type])
+  NEEDS_VERIFICATION
+  MODIFIED
+  REJECTED
 }

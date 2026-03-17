@@ -42,6 +42,14 @@ export default function AdminNotificationsClient({
       if (n.sentById !== selectedSenderId) return false;
     }
 
+    if (filterType === "individual") {
+      if (n.user.role === "ALL" || n.user.role === "GROUP") return false;
+    }
+
+    if (filterType === "group") {
+      if (n.user.role !== "ALL" && n.user.role !== "GROUP") return false;
+    }
+
     return true;
   });
 
@@ -69,6 +77,8 @@ export default function AdminNotificationsClient({
               className="h-[52px] min-w-[160px] appearance-none rounded-full bg-[#ffb755] px-6 text-[18px] font-bold text-white shadow-lg outline-none transition-all hover:scale-105"
             >
               <option value="all">Filter: All</option>
+              <option value="individual">Individual Notifications</option>
+              <option value="group">Group Notifications</option>
               <option value="date">Filter by Date</option>
               <option value="sender">Filter by Sender</option>
             </select>

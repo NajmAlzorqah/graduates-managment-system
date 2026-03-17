@@ -9,9 +9,11 @@ import {
 } from "@/lib/api/notifications";
 import {
   getAllApprovedStudentIds,
+  getFilteredStudentsCount,
   getStudentIdsByFilter,
 } from "@/lib/api/students";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { createNotificationSchema } from "@/lib/validations/notification";
 
 type ActionResult = { success: true } | { success: false; error: string };
@@ -65,6 +67,7 @@ export type SendNotificationData = {
   recipientType: "all" | "group" | "single";
   major?: string;
   graduationYear?: number;
+  status?: "active" | "graduated" | "all";
   studentId?: string;
 };
 
@@ -79,8 +82,15 @@ export async function sendNewNotificationAction(
     return { success: false, error: "Unauthorized" };
   }
 
-  const { title, message, recipientType, major, graduationYear, studentId } =
-    data;
+  const {
+    title,
+    message,
+    recipientType,
+    major,
+    graduationYear,
+    status,
+    studentId,
+  } = data;
 
   if (!title.trim() || !message.trim()) {
     return { success: false, error: "العنوان والرسالة مطلوبان" };
@@ -98,6 +108,7 @@ export async function sendNewNotificationAction(
       const ids = await getStudentIdsByFilter(
         major || undefined,
         graduationYear,
+        status === "all" ? undefined : status,
       );
       if (ids.length === 0) {
         return { success: false, error: "لا يوجد طلاب في هذه المجموعة" };
@@ -117,6 +128,24 @@ export async function sendNewNotificationAction(
     console.error("Error sending notification:", error);
     return { success: false, error: "فشل في إرسال الإشعار" };
   }
+}
+
+export async function getRecipientCountAction(filter: {
+  major?: string;
+  graduationYear?: number;
+  status?: "active" | "graduated" | "all";
+  recipientType: "all" | "group" | "single";
+  studentId?: string;
+}): Promise<number> {
+  if (filter.recipientType === "all") {
+    return prisma.user.count({ where: { role: "STUDENT", isApproved: true } });
+  }
+
+  if (filter.recipientType === "single") {
+    return filter.studentId ? 1 : 0;
+  }
+
+  return getFilteredStudentsCount(filter);
 }
 
 export async function deleteNotificationAction(

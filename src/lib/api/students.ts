@@ -15,6 +15,9 @@ const stepStatusMap = {
   COMPLETED: "completed",
   IN_PROGRESS: "in-progress",
   PENDING: "pending",
+  NEEDS_VERIFICATION: "needs-verification",
+  MODIFIED: "modified",
+  REJECTED: "rejected",
 } as const;
 
 export async function getStudentsWithCertSteps(
@@ -35,7 +38,6 @@ export async function getStudentsWithCertSteps(
     id: u.id,
     name: u.name,
     nameAr: u.nameAr,
-    nameEn: u.nameEn,
     major: u.studentProfile?.major ?? null,
     steps: u.certificateSteps.map((s) => ({
       id: s.id,
@@ -328,17 +330,59 @@ export async function getAllApprovedStudentIds(): Promise<string[]> {
 export async function getStudentIdsByFilter(
   major?: string,
   graduationYear?: number,
+  status?: "active" | "graduated",
 ): Promise<string[]> {
-  const users = await prisma.user.findMany({
-    where: {
-      role: "STUDENT",
-      isApproved: true,
-      studentProfile: {
-        ...(major ? { major } : {}),
-        ...(graduationYear ? { graduationYear } : {}),
-      },
+  const where: any = {
+    role: "STUDENT",
+    isApproved: true,
+    studentProfile: {
+      ...(major ? { major } : {}),
+      ...(graduationYear ? { graduationYear } : {}),
     },
+  };
+
+  if (status === "active") {
+    where.certificateSteps = {
+      some: { status: { in: ["PENDING", "IN_PROGRESS"] } },
+    };
+  } else if (status === "graduated") {
+    where.certificateSteps = {
+      none: { status: { in: ["PENDING", "IN_PROGRESS"] } },
+    };
+  }
+
+  const users = await prisma.user.findMany({
+    where,
     select: { id: true },
   });
   return users.map((u) => u.id);
+}
+
+export async function getFilteredStudentsCount(filter: {
+  major?: string;
+  graduationYear?: number;
+  status?: "active" | "graduated" | "all";
+}): Promise<number> {
+  const where: any = {
+    role: "STUDENT",
+    isApproved: true,
+    studentProfile: {
+      ...(filter.major ? { major: filter.major } : {}),
+      ...(filter.graduationYear
+        ? { graduationYear: filter.graduationYear }
+        : {}),
+    },
+  };
+
+  if (filter.status === "active") {
+    where.certificateSteps = {
+      some: { status: { in: ["PENDING", "IN_PROGRESS"] } },
+    };
+  } else if (filter.status === "graduated") {
+    where.certificateSteps = {
+      none: { status: { in: ["PENDING", "IN_PROGRESS"] } },
+    };
+  }
+
+  return prisma.user.count({ where });
 }
