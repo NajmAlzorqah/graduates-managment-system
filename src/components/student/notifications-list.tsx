@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
+
 import NotificationCard, {
   type SerializedNotification,
 } from "@/components/student/notification-card";
@@ -116,6 +117,7 @@ export default function NotificationsList({
         } catch (error) {
           console.error("Failed to mark as read:", error);
         }
+     
       });
     }
   }
@@ -161,6 +163,7 @@ export default function NotificationsList({
       } catch (error) {
         toast.error("حدث خطأ ما");
       }
+      
     });
   }
 
