@@ -3,29 +3,33 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { SerializedNotification } from "./notification-card";
-import { confirmStepAction } from "@/lib/actions/student";
+import { confirmStepAction, updateStudentDataAction } from "@/lib/actions/student";
+import type { StudentWithProfile } from "@/types/student";
 
 type NotificationDetailsModalProps = {
   notification: SerializedNotification;
+  student: StudentWithProfile | null;
   onClose: () => void;
 };
 
 export default function NotificationDetailsModal({
   notification,
+  student,
   onClose,
 }: NotificationDetailsModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Example pre-filled data based on Figma mockup
+  // Initialize data from student prop or fallbacks
   const [formData, setFormData] = useState({
-    nameAr: "صالح مصلح المصلوحي",
-    name: "Saleh Mosleh Almaslohy",
-    major: "IT",
-    studentCardNumber: "20210001", // Required by backend API
-    graduationYear: new Date().getFullYear(), // Required by backend API
+    nameAr: student?.nameAr || "",
+    name: student?.name || "",
+    major: student?.profile?.major || "IT",
+    studentCardNumber: student?.profile?.studentCardNumber || "",
+    graduationYear: student?.profile?.graduationYear || new Date().getFullYear(),
   });
 
   useEffect(() => {
@@ -48,7 +52,32 @@ export default function NotificationDetailsModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ 
+      ...prev, 
+      [name]: name === "graduationYear" ? parseInt(value) || 0 : value 
+    }));
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      setIsSaving(true);
+      const res = await updateStudentDataAction(formData);
+      
+      if (res.error) {
+        throw new Error(res.error);
+      }
+
+      toast.success("تم حفظ التعديلات بنجاح", {
+        style: { fontFamily: "Tajawal, sans-serif" },
+      });
+      setIsEditing(false);
+    } catch (err) {
+      toast.error("حدث خطأ أثناء حفظ التعديلات", {
+        style: { fontFamily: "Tajawal, sans-serif" },
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleConfirmAction = async () => {
@@ -277,15 +306,21 @@ export default function NotificationDetailsModal({
               <>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="flex-1 bg-gray-200 text-[#1a3b5c] font-arabic font-bold text-xl py-3 rounded-xl hover:bg-gray-300 transition-colors shadow-md"
+                  disabled={isSaving}
+                  className="flex-1 bg-gray-200 text-[#1a3b5c] font-arabic font-bold text-xl py-3 rounded-xl hover:bg-gray-300 transition-colors shadow-md disabled:opacity-50"
                 >
                   إلغاء
                 </button>
                 <button
-                  onClick={() => setIsEditing(false)}
-                  className="flex-1 bg-[#ffb755] text-white font-arabic font-bold text-xl py-3 rounded-xl hover:bg-[#e5a547] transition-colors shadow-md"
+                  onClick={handleSaveChanges}
+                  disabled={isSaving}
+                  className="flex-1 bg-[#ffb755] text-white font-arabic font-bold text-xl py-3 rounded-xl hover:bg-[#e5a547] transition-colors shadow-md disabled:opacity-50"
                 >
-                  حفظ التعديلات
+                  {isSaving ? (
+                    <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></span>
+                  ) : (
+                    "حفظ التعديلات"
+                  )}
                 </button>
               </>
             ) : (

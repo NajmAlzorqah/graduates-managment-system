@@ -218,6 +218,12 @@ export async function deleteNotification(
   });
 }
 
+export async function deleteAllUserNotifications(userId: string): Promise<void> {
+  await prisma.notification.deleteMany({
+    where: { userId },
+  });
+}
+
 export async function deleteAllNotifications(): Promise<void> {
   await prisma.notification.deleteMany();
 }

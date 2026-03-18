@@ -2,14 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import NotificationCard, {
   type SerializedNotification,
 } from "@/components/student/notification-card";
 import NotificationDetailsModal from "@/components/student/notification-details-modal";
 
+import type { StudentWithProfile } from "@/types/student";
+
 type NotificationsListProps = {
   initialNotifications: SerializedNotification[];
+  student: StudentWithProfile | null;
 };
 
 function SearchIcon() {
@@ -61,6 +64,7 @@ function TrashIcon() {
 
 export default function NotificationsList({
   initialNotifications,
+  student,
 }: NotificationsListProps) {
   const router = useRouter();
   const [notifications, setNotifications] =
@@ -99,28 +103,64 @@ export default function NotificationsList({
     // Only mark read if unread
     if (notif && !notif.isRead) {
       startTransition(async () => {
-        await fetch(`/api/notifications/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isRead: true }),
-        });
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-        );
-        router.refresh();
+        try {
+          await fetch(`/api/notifications/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ isRead: true }),
+          });
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+          );
+          router.refresh();
+        } catch (error) {
+          console.error("Failed to mark as read:", error);
+        }
       });
     }
   }
 
   function handleDismiss(id: string) {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/notifications/${id}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          setNotifications((prev) => prev.filter((n) => n.id !== id));
+          toast.success("تم حذف الإشعار بنجاح", {
+            style: { fontFamily: "Tajawal, sans-serif" },
+          });
+          router.refresh();
+        } else {
+          toast.error("فشل حذف الإشعار");
+        }
+      } catch (error) {
+        toast.error("حدث خطأ ما");
+      }
+    });
   }
 
   function handleDeleteAll() {
+    if (!confirm("هل أنت متأكد من حذف جميع الإشعارات؟")) return;
+
     startTransition(async () => {
-      await fetch("/api/notifications/read-all", { method: "POST" });
-      setNotifications([]);
-      router.refresh();
+      try {
+        const res = await fetch("/api/notifications/delete-all", {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          setNotifications([]);
+          toast.success("تم حذف جميع الإشعارات بنجاح", {
+            style: { fontFamily: "Tajawal, sans-serif" },
+          });
+          router.refresh();
+        } else {
+          toast.error("فشل حذف الإشعارات");
+        }
+      } catch (error) {
+        toast.error("حدث خطأ ما");
+      }
     });
   }
 
@@ -229,7 +269,9 @@ export default function NotificationsList({
 
       {selectedNotification && (
         <NotificationDetailsModal
+          key={selectedNotification.id}
           notification={selectedNotification}
+          student={student}
           onClose={() => setSelectedNotification(null)}
         />
       )}

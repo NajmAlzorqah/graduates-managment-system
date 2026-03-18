@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { markAsRead } from "@/lib/api/notifications";
+import { deleteNotification, markAsRead } from "@/lib/api/notifications";
 import { auth } from "@/lib/auth";
 import { markReadSchema } from "@/lib/validations/notification";
 
@@ -24,4 +24,23 @@ export async function PUT(request: Request, { params }: Params) {
 
   await markAsRead(id);
   return NextResponse.json({ success: true });
+}
+
+export async function DELETE(request: Request, { params }: Params) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  try {
+    await deleteNotification(id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete notification:", error);
+    return NextResponse.json(
+      { error: "Failed to delete notification" },
+      { status: 500 }
+    );
+  }
 }

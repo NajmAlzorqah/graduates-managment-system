@@ -68,6 +68,59 @@ export async function updateOwnProfileAction(
   }
 }
 
+export async function updateStudentDataAction(data: {
+  nameAr?: string;
+  name?: string;
+  major?: string;
+  studentCardNumber?: string;
+  graduationYear?: number;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "غير مصرح" };
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Update User info
+      if (data.nameAr || data.name) {
+        await tx.user.update({
+          where: { id: session.user.id },
+          data: {
+            ...(data.nameAr && { nameAr: data.nameAr }),
+            ...(data.name && { name: data.name }),
+          },
+        });
+      }
+
+      // Update Student Profile
+      if (data.major || data.studentCardNumber || data.graduationYear) {
+        await tx.studentProfile.upsert({
+          where: { userId: session.user.id },
+          update: {
+            ...(data.major && { major: data.major }),
+            ...(data.studentCardNumber && {
+              studentCardNumber: data.studentCardNumber,
+            }),
+            ...(data.graduationYear && { graduationYear: data.graduationYear }),
+          },
+          create: {
+            userId: session.user.id,
+            major: data.major || "",
+            studentCardNumber: data.studentCardNumber || null,
+            graduationYear: data.graduationYear || null,
+          },
+        });
+      }
+    });
+
+    revalidatePath("/student/notifications");
+    revalidatePath("/student/profile");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating student data:", error);
+    return { error: "حدث خطأ أثناء تحديث البيانات" };
+  }
+}
+
 export async function confirmStepAction(stepOrder: number) {
   const session = await auth();
   if (!session?.user?.id) return { error: "غير مصرح" };
