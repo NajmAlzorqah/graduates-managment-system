@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useOptimistic } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Lock, 
@@ -61,45 +61,56 @@ function Toggle({
   onToggle,
   label,
   icon: Icon,
-  isPending
 }: {
   isOn: boolean;
   onToggle: () => void;
   label: string;
   icon: any;
-  isPending?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between w-full py-1">
-      <div className="flex items-center gap-3 order-2">
-        <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
-          {label}
-        </span>
+      <div className="flex items-center gap-3">
         <div className="text-[#1a3b5c]">
           <Icon size={20} />
         </div>
+        <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
+          {label}
+        </span>
       </div>
       <button
         type="button"
         onClick={onToggle}
-        disabled={isPending}
-        className="relative inline-flex h-8 w-[72px] items-center rounded-full bg-[#1a3b5c] transition-colors disabled:opacity-50"
+        className={`relative inline-flex h-7 w-[52px] items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#1a3b5c] focus:ring-offset-2 p-1 group ${
+          isOn ? "bg-[#1a3b5c]" : "bg-gray-300"
+        }`}
+        dir="ltr"
       >
+        <span className="sr-only">{label}</span>
+        
+        {/* On Label */}
         <span
-          className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-            isOn ? "translate-x-10" : "translate-x-1"
+          className={`absolute left-[7px] text-[9px] font-black uppercase tracking-tighter transition-all duration-300 pointer-events-none ${
+            isOn ? "opacity-100 translate-x-0 text-white" : "opacity-0 -translate-x-2"
           }`}
-        />
-        <span
-          className={`absolute text-xs font-bold text-white transition-opacity ${isOn ? "left-2.5" : "left-2.5 opacity-0"}`}
         >
           on
         </span>
+        
+        {/* Off Label */}
         <span
-          className={`absolute text-xs font-bold text-white transition-opacity ${!isOn ? "right-2.5" : "right-2.5 opacity-0"}`}
+          className={`absolute right-[7px] text-[9px] font-black uppercase tracking-tighter transition-all duration-300 pointer-events-none ${
+            !isOn ? "opacity-100 translate-x-0 text-gray-500" : "opacity-0 translate-x-2"
+          }`}
         >
           off
         </span>
+
+        {/* Thumb */}
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.2)] transition-transform duration-300 ease-[cubic-bezier(0.45,0.05,0.55,0.95)] ${
+            isOn ? "translate-x-6" : "translate-x-0"
+          } group-active:scale-90`}
+        />
       </button>
     </div>
   );
@@ -109,19 +120,16 @@ function RadioOption({
   selected,
   onSelect,
   label,
-  isPending
 }: {
   selected: boolean;
   onSelect: () => void;
   label: string;
-  isPending?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      disabled={isPending}
-      className="flex items-center gap-2 disabled:opacity-50"
+      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
     >
       <div
         className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selected ? "border-[#1a3b5c] bg-white" : "border-white"}`}
@@ -139,17 +147,20 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
-  const [settings, setSettings] = useState(initialSettings);
+  const [optimisticSettings, setOptimisticSettings] = useOptimistic(
+    initialSettings,
+    (state, update: Partial<typeof initialSettings>) => ({
+      ...state,
+      ...update
+    })
+  );
 
-  const handleUpdateSetting = (update: Partial<typeof settings>) => {
-    const newSettings = { ...settings, ...update };
-    setSettings(newSettings);
-    
+  const handleUpdateSetting = (update: Partial<typeof initialSettings>) => {
     startTransition(async () => {
+      setOptimisticSettings(update);
       const result = await updateUserSettingsAction(update as any);
       if (result.error) {
         toast.error(result.error);
-        setSettings(settings); // Rollback
       } else {
         toast.success("تم تحديث الإعدادات");
       }
@@ -171,7 +182,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
       {/* Account Settings */}
       <SectionCard title="اعدادات الحساب :">
         <div className="flex items-center justify-between py-1">
-          <div className="flex items-center gap-3 order-2">
+          <div className="flex items-center gap-3">
             <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
               تغيير كلمة المرور
             </span>
@@ -189,7 +200,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
         <div className="h-px w-full bg-[#1a3b5c]/10"></div>
         
         <div className="flex items-center justify-between py-1">
-          <div className="flex items-center gap-3 order-2">
+          <div className="flex items-center gap-3">
             <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
               تغيير الايميل
             </span>
@@ -210,24 +221,22 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
         <Toggle
           label="إشعارات البريد"
           icon={Mail}
-          isOn={settings.emailNotifications}
-          onToggle={() => handleUpdateSetting({ emailNotifications: !settings.emailNotifications })}
-          isPending={isPending}
+          isOn={optimisticSettings.emailNotifications}
+          onToggle={() => handleUpdateSetting({ emailNotifications: !optimisticSettings.emailNotifications })}
         />
         <div className="h-px w-full bg-[#1a3b5c]/10"></div>
         <Toggle
           label="التنبيهات داخل الموقع"
           icon={Bell}
-          isOn={settings.siteNotifications}
-          onToggle={() => handleUpdateSetting({ siteNotifications: !settings.siteNotifications })}
-          isPending={isPending}
+          isOn={optimisticSettings.siteNotifications}
+          onToggle={() => handleUpdateSetting({ siteNotifications: !optimisticSettings.siteNotifications })}
         />
       </SectionCard>
 
       {/* Interface Settings */}
       <SectionCard title="إعدادات الواجهة:">
         <div className="flex items-center justify-between w-full py-1">
-          <div className="flex items-center gap-3 order-2">
+          <div className="flex items-center gap-3">
             <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
               اختيار اللغة
             </span>
@@ -236,15 +245,13 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           <div className="flex gap-4">
             <RadioOption
               label="English"
-              selected={settings.language === "en"}
+              selected={optimisticSettings.language === "en"}
               onSelect={() => handleUpdateSetting({ language: "en" })}
-              isPending={isPending}
             />
             <RadioOption
               label="عربي"
-              selected={settings.language === "ar"}
+              selected={optimisticSettings.language === "ar"}
               onSelect={() => handleUpdateSetting({ language: "ar" })}
-              isPending={isPending}
             />
           </div>
         </div>
@@ -252,26 +259,24 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
         <div className="h-px w-full bg-[#1a3b5c]/10"></div>
 
         <div className="flex items-center justify-between w-full py-1">
-          <div className="flex items-center gap-3 order-2">
+          <div className="flex items-center gap-3">
             <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
               ثيم الموقع
             </span>
             <div className="text-[#1a3b5c]">
-              {settings.theme === "light" ? <Sun size={20} /> : <Moon size={20} />}
+              {optimisticSettings.theme === "light" ? <Sun size={20} /> : <Moon size={20} />}
             </div>
           </div>
           <div className="flex gap-4">
              <RadioOption
               label="ليلي"
-              selected={settings.theme === "dark"}
+              selected={optimisticSettings.theme === "dark"}
               onSelect={() => handleUpdateSetting({ theme: "dark" })}
-              isPending={isPending}
             />
             <RadioOption
               label="نهاري"
-              selected={settings.theme === "light"}
+              selected={optimisticSettings.theme === "light"}
               onSelect={() => handleUpdateSetting({ theme: "light" })}
-              isPending={isPending}
             />
           </div>
         </div>
@@ -307,9 +312,14 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
       )}
       {isEmailModalOpen && (
         <ChangeEmailModal 
-          currentEmail={settings.email}
+          currentEmail={optimisticSettings.email}
           onClose={() => setIsEmailModalOpen(false)} 
-          onSuccess={(newEmail) => setSettings({ ...settings, email: newEmail })}
+          onSuccess={(newEmail) => {
+            // Since email change is a formal update that might trigger logout or re-auth, 
+            // we should probably let the modal handle its own state or refresh.
+            // But for the sake of the UI update:
+            router.refresh();
+          }}
         />
       )}
     </div>

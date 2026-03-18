@@ -1,9 +1,12 @@
 import SettingsForm from "@/components/staff/settings-form";
+import { getStaffSettings } from "@/lib/actions/staff";
 
-export default function StaffSettingsPage() {
+export default async function StaffSettingsPage() {
+  const settings = await getStaffSettings();
+
   return (
     <div className="mx-auto w-full max-w-[1120px]">
-      <SettingsForm />
+      <SettingsForm initialSettings={settings} />
     </div>
   );
 }

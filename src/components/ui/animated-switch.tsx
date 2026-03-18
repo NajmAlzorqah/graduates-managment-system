@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,20 @@ export default function AnimatedSwitch({
   const activeIndex = options.findIndex((option) => option.value === value);
   const resolvedIndex = activeIndex === -1 ? 0 : activeIndex;
 
+  const [isRtl, setIsRtl] = useState(true);
+
+  useEffect(() => {
+    setIsRtl(document.documentElement.dir === "rtl");
+  }, []);
+
+  const leftPosition = isRtl
+    ? resolvedIndex === 0
+      ? "calc(50% + 0px)"
+      : "4px"
+    : resolvedIndex === 0
+      ? "4px"
+      : "calc(50% + 0px)";
+
   return (
     <div
       role="radiogroup"
@@ -48,7 +63,7 @@ export default function AnimatedSwitch({
         )}
         initial={false}
         animate={{
-          left: resolvedIndex === 0 ? "4px" : "calc(50% + 0px)",
+          left: leftPosition,
         }}
         transition={{ type: "spring", stiffness: 320, damping: 28 }}
       />

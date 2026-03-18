@@ -112,9 +112,49 @@ export async function updateStaffPreferences(prefs: {
   }
 
   try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        emailNotifications: prefs.emailNotifications === "on",
+        siteNotifications: prefs.siteNotifications === "on",
+      },
+    });
+
     revalidatePath("/staff/settings");
     return { success: "Preferences updated." };
-  } catch {
+  } catch (error) {
+    console.error("Error updating staff preferences:", error);
     return { error: "Failed to update preferences." };
+  }
+}
+
+export async function getStaffSettings() {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "STAFF") {
+    return null;
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        emailNotifications: true,
+        siteNotifications: true,
+        language: true,
+        theme: true,
+      },
+    });
+
+    if (!user) return null;
+
+    return {
+      emailNotifications: (user.emailNotifications ? "on" : "off") as "on" | "off",
+      siteNotifications: (user.siteNotifications ? "on" : "off") as "on" | "off",
+      language: user.language as "ar" | "en",
+      theme: user.theme as "light" | "dark",
+    };
+  } catch (error) {
+    console.error("Error fetching staff settings:", error);
+    return null;
   }
 }

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import AdminSettingsForm from "@/components/admin/admin-settings-form";
 import { auth } from "@/lib/auth";
+import { getAdminSettings } from "@/lib/actions/admin";
 
 export default async function AdminSettingsPage() {
   const session = await auth();
@@ -13,6 +14,8 @@ export default async function AdminSettingsPage() {
     redirect("/");
   }
 
+  const settings = await getAdminSettings();
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -20,7 +23,7 @@ export default async function AdminSettingsPage() {
           Settings
         </h1>
       </div>
-      <AdminSettingsForm />
+      <AdminSettingsForm initialSettings={settings} />
     </div>
   );
 }

@@ -112,11 +112,49 @@ export async function updateAdminPreferences(prefs: {
   }
 
   try {
-    // In a real app, you might save these to the database.
-    // For now, we'll just follow the staff pattern of revalidating.
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        emailNotifications: prefs.emailNotifications === "on",
+        siteNotifications: prefs.siteNotifications === "on",
+      },
+    });
+
     revalidatePath("/admin/settings");
     return { success: "Preferences updated." };
-  } catch {
+  } catch (error) {
+    console.error("Error updating admin preferences:", error);
     return { error: "Failed to update preferences." };
+  }
+}
+
+export async function getAdminSettings() {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
+    return null;
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        emailNotifications: true,
+        siteNotifications: true,
+        language: true,
+        theme: true,
+      },
+    });
+
+    if (!user) return null;
+
+    return {
+      emailNotifications: (user.emailNotifications ? "on" : "off") as "on" | "off",
+      siteNotifications: (user.siteNotifications ? "on" : "off") as "on" | "off",
+      language: user.language as "ar" | "en",
+      theme: user.theme as "light" | "dark",
+    };
+  } catch (error) {
+    console.error("Error fetching admin settings:", error);
+    return null;
   }
 }

@@ -11,7 +11,7 @@ import {
   SunMedium,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useOptimistic } from "react";
 import toast from "react-hot-toast";
 
 import AnimatedSwitch from "@/components/ui/animated-switch";
@@ -30,8 +30,6 @@ type AdminSettingsState = {
   language: LanguagePreference;
   theme: ThemePreference;
 };
-
-const STORAGE_KEY = "admin-settings";
 
 const DEFAULT_SETTINGS: AdminSettingsState = {
   emailNotifications: "on",
@@ -55,21 +53,8 @@ const SWITCH_OPTIONS = {
   ] as const,
 };
 
-function readStoredSettings(): AdminSettingsState {
-  if (typeof window === "undefined") {
-    return DEFAULT_SETTINGS;
-  }
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(stored) as Partial<AdminSettingsState>;
-    return { ...DEFAULT_SETTINGS, ...parsed };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
-}
-
 function applyDocumentPreferences(settings: Partial<AdminSettingsState>) {
+  if (typeof document === "undefined") return;
   if (settings.language) {
     const isArabic = settings.language === "ar";
     document.documentElement.lang = isArabic ? "ar" : "en";
@@ -175,49 +160,58 @@ function ActionIconButton({
   );
 }
 
-export default function AdminSettingsForm() {
+interface AdminSettingsFormProps {
+  initialSettings: AdminSettingsState | null;
+}
+
+export default function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
   const { data: session, update } = useSession();
-  const [settings, setSettings] =
-    useState<AdminSettingsState>(DEFAULT_SETTINGS);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [isNameModalOpen, setNameModalOpen] = useState(false);
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
 
+  const baseSettings = initialSettings ?? DEFAULT_SETTINGS;
+
+  const [optimisticSettings, setOptimisticSettings] = useOptimistic(
+    baseSettings,
+    (state, update: Partial<AdminSettingsState>) => ({
+      ...state,
+      ...update,
+    })
+  );
+
   useEffect(() => {
-    const storedSettings = readStoredSettings();
-    setSettings(storedSettings);
-    applyDocumentPreferences(storedSettings);
+    applyDocumentPreferences(baseSettings);
     setHasLoaded(true);
-  }, []);
+  }, [baseSettings]);
 
   const handleSettingChange = <K extends keyof AdminSettingsState>(
     key: K,
     value: AdminSettingsState[K],
   ) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
-    applyDocumentPreferences({ [key]: value });
+    startTransition(async () => {
+      setOptimisticSettings({ [key]: value });
+      applyDocumentPreferences({ [key]: value });
 
-    toast.success(`${key.replace(/([A-Z])/g, " $1").trim()} updated.`, {
-      id: key,
-    });
-
-    if (key === "emailNotifications" || key === "siteNotifications") {
-      startTransition(() => {
-        updateAdminPreferences({
-          emailNotifications: newSettings.emailNotifications,
-          siteNotifications: newSettings.siteNotifications,
-        }).then((res) => {
-          if (res.error) toast.error(res.error, { id: "pref-update" });
-          if (res.success) toast.success(res.success, { id: "pref-update" });
+      if (key === "emailNotifications" || key === "siteNotifications") {
+        const result = await updateAdminPreferences({
+          emailNotifications: key === "emailNotifications" ? (value as NotificationPreference) : optimisticSettings.emailNotifications,
+          siteNotifications: key === "siteNotifications" ? (value as NotificationPreference) : optimisticSettings.siteNotifications,
         });
-      });
-    }
-    if (key === "language") {
-      document.location.reload();
-    }
+
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          toast.success("Preferences updated successfully.");
+        }
+      } else {
+        toast.success(`${key.replace(/([A-Z])/g, " $1").trim()} updated.`);
+        if (key === "language") {
+          document.location.reload();
+        }
+      }
+    });
   };
 
   if (!hasLoaded) {
@@ -270,7 +264,7 @@ export default function AdminSettingsForm() {
               <AnimatedSwitch
                 ariaLabel="أشعارات البريد"
                 options={[...SWITCH_OPTIONS.notification]}
-                value={settings.emailNotifications}
+                value={optimisticSettings.emailNotifications}
                 onChange={(value) =>
                   handleSettingChange(
                     "emailNotifications",
@@ -288,7 +282,7 @@ export default function AdminSettingsForm() {
               <AnimatedSwitch
                 ariaLabel="التنبيهات داخل الموقع"
                 options={[...SWITCH_OPTIONS.notification]}
-                value={settings.siteNotifications}
+                value={optimisticSettings.siteNotifications}
                 onChange={(value) =>
                   handleSettingChange(
                     "siteNotifications",
@@ -309,7 +303,7 @@ export default function AdminSettingsForm() {
               <AnimatedSwitch
                 ariaLabel="اختيار اللغة"
                 options={[...SWITCH_OPTIONS.language]}
-                value={settings.language}
+                value={optimisticSettings.language}
                 onChange={(value) =>
                   handleSettingChange("language", value as LanguagePreference)
                 }
@@ -323,7 +317,7 @@ export default function AdminSettingsForm() {
               <AnimatedSwitch
                 ariaLabel="النمط"
                 options={[...SWITCH_OPTIONS.theme]}
-                value={settings.theme}
+                value={optimisticSettings.theme}
                 onChange={(value) =>
                   handleSettingChange("theme", value as ThemePreference)
                 }
