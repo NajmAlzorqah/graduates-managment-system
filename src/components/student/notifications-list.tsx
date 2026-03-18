@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import NotificationCard, {
   type SerializedNotification,
@@ -61,6 +62,7 @@ function TrashIcon() {
 export default function NotificationsList({
   initialNotifications,
 }: NotificationsListProps) {
+  const router = useRouter();
   const [notifications, setNotifications] =
     useState<SerializedNotification[]>(initialNotifications);
   const [search, setSearch] = useState("");
@@ -105,6 +107,7 @@ export default function NotificationsList({
         setNotifications((prev) =>
           prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
         );
+        router.refresh();
       });
     }
   }
@@ -117,6 +120,7 @@ export default function NotificationsList({
     startTransition(async () => {
       await fetch("/api/notifications/read-all", { method: "POST" });
       setNotifications([]);
+      router.refresh();
     });
   }
 

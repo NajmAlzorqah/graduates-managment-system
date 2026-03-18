@@ -32,7 +32,7 @@ const navItems = [
 
 type IconName = (typeof navItems)[number]["icon"];
 
-function NavIcon({ icon, active }: { icon: IconName; active: boolean }) {
+function NavIcon({ icon, active, unreadCount = 0 }: { icon: IconName; active: boolean; unreadCount?: number }) {
   const color = active ? "white" : "#1a3b5c";
   const size = active ? 26 : 22;
 
@@ -51,15 +51,24 @@ function NavIcon({ icon, active }: { icon: IconName; active: boolean }) {
       );
     case "bell":
       return (
-        <svg
-          width={size}
-          height={size}
-          viewBox="0 0 24 24"
-          fill={color}
-          aria-hidden="true"
-        >
-          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-        </svg>
+        <div className="relative">
+          <svg
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill={color}
+            aria-hidden="true"
+          >
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+          </svg>
+          {unreadCount > 0 && (
+            <span 
+              className={`absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ${active ? 'ring-[#f4b24d]' : 'ring-[#f7f7f7]'}`}
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </div>
       );
     case "settings":
       return (
@@ -88,7 +97,7 @@ function NavIcon({ icon, active }: { icon: IconName; active: boolean }) {
   }
 }
 
-export default function StudentBottomNav() {
+export default function StudentBottomNav({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -122,7 +131,11 @@ export default function StudentBottomNav() {
                         : "h-10 w-10 translate-y-2 bg-transparent opacity-60 hover:opacity-100",
                     ].join(" ")}
                   >
-                    <NavIcon icon={item.icon} active={isActive} />
+                    <NavIcon 
+                      icon={item.icon} 
+                      active={isActive} 
+                      unreadCount={item.id === "notifications" ? unreadCount : 0} 
+                    />
                   </div>
                   <span
                     className={[
