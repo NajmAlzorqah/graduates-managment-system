@@ -17,6 +17,9 @@ export async function getStudentHomeData(
     COMPLETED: "completed",
     IN_PROGRESS: "in-progress",
     PENDING: "pending",
+    NEEDS_VERIFICATION: "needs-verification",
+    MODIFIED: "modified",
+    REJECTED: "rejected",
   } as const;
 
   const docStatusMap = {
@@ -34,7 +37,7 @@ export async function getStudentHomeData(
     certificateSteps: user.certificateSteps.map((s) => ({
       id: s.id,
       label: s.label,
-      status: statusMap[s.status],
+      status: statusMap[s.status as keyof typeof statusMap],
     })),
     documents: user.documents.map((d) => ({
       id: d.id,

@@ -13,6 +13,9 @@ const statusMap = {
   COMPLETED: "completed",
   IN_PROGRESS: "in-progress",
   PENDING: "pending",
+  NEEDS_VERIFICATION: "needs-verification",
+  MODIFIED: "modified",
+  REJECTED: "rejected",
 } as const;
 
 export async function getStepsByStudent(
@@ -26,13 +29,13 @@ export async function getStepsByStudent(
   return steps.map((s) => ({
     id: s.id,
     label: s.label,
-    status: statusMap[s.status],
+    status: statusMap[s.status as keyof typeof statusMap],
   }));
 }
 
 export async function updateStepStatus(
   stepId: string,
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED",
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "NEEDS_VERIFICATION" | "MODIFIED" | "REJECTED",
   staffId: string,
 ): Promise<CertificateStep> {
   const step = await prisma.certificateStep.update({
@@ -43,7 +46,7 @@ export async function updateStepStatus(
   return {
     id: step.id,
     label: step.label,
-    status: statusMap[step.status],
+    status: statusMap[step.status as keyof typeof statusMap],
   };
 }
 

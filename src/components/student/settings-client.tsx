@@ -1,25 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { 
+  Lock, 
+  Mail, 
+  Pencil, 
+  Bell, 
+  Globe, 
+  Moon, 
+  Sun, 
+  LogOut, 
+  ChevronLeft,
+  Loader2,
+  X
+} from "lucide-react";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-function EditIcon() {
+import { 
+  updateUserSettingsAction, 
+  changePasswordAction, 
+  changeEmailAction 
+} from "@/lib/actions/student-settings";
+import { logoutAction } from "@/lib/actions/logout";
+import { 
+  changeEmailSchema, 
+  changePasswordSchema,
+  type ChangeEmailInput,
+  type ChangePasswordInput
+} from "@/lib/validations/student-settings";
+import { Button } from "@/components/ui/button";
+
+interface SettingsClientProps {
+  initialSettings: {
+    email: string;
+    emailNotifications: boolean;
+    siteNotifications: boolean;
+    language: string;
+    theme: string;
+  };
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-[#1a3b5c]"
-      role="img"
-      aria-label="Edit Icon"
-    >
-      <title>Edit</title>
-      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-    </svg>
+    <div className="bg-white rounded-[35px] p-5 shadow-lg flex flex-col gap-4 w-full">
+      <h2 className="text-[#1a3b5c] text-xl font-bold font-arabic text-right px-2">
+        {title}
+      </h2>
+      <div className="bg-[#ffb755] rounded-[25px] p-5 flex flex-col gap-4 shadow-inner">
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -27,33 +60,43 @@ function Toggle({
   isOn,
   onToggle,
   label,
+  icon: Icon,
+  isPending
 }: {
   isOn: boolean;
   onToggle: () => void;
   label: string;
+  icon: any;
+  isPending?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between w-full py-2">
-      <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
-        {label}
-      </span>
+    <div className="flex items-center justify-between w-full py-1">
+      <div className="flex items-center gap-3 order-2">
+        <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
+          {label}
+        </span>
+        <div className="text-[#1a3b5c]">
+          <Icon size={20} />
+        </div>
+      </div>
       <button
         type="button"
         onClick={onToggle}
-        className="relative inline-flex h-8 w-[68px] items-center rounded-full bg-[#1a3b5c] shadow-inner"
+        disabled={isPending}
+        className="relative inline-flex h-8 w-[72px] items-center rounded-full bg-[#1a3b5c] transition-colors disabled:opacity-50"
       >
         <span
           className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-            isOn ? "-translate-x-[38px]" : "-translate-x-1"
+            isOn ? "translate-x-10" : "translate-x-1"
           }`}
         />
         <span
-          className={`absolute text-sm font-semibold text-white transition-opacity ${isOn ? "right-2" : "right-2 opacity-0"}`}
+          className={`absolute text-xs font-bold text-white transition-opacity ${isOn ? "left-2.5" : "left-2.5 opacity-0"}`}
         >
           on
         </span>
         <span
-          className={`absolute text-sm font-semibold text-white transition-opacity ${!isOn ? "left-2" : "left-2 opacity-0"}`}
+          className={`absolute text-xs font-bold text-white transition-opacity ${!isOn ? "right-2.5" : "right-2.5 opacity-0"}`}
         >
           off
         </span>
@@ -66,122 +109,366 @@ function RadioOption({
   selected,
   onSelect,
   label,
+  isPending
 }: {
   selected: boolean;
   onSelect: () => void;
   label: string;
+  isPending?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      className="flex items-center gap-2"
+      disabled={isPending}
+      className="flex items-center gap-2 disabled:opacity-50"
     >
       <div
-        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? "border-[#1a3b5c]" : "border-white"}`}
+        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selected ? "border-[#1a3b5c] bg-white" : "border-white"}`}
       >
         {selected && <div className="w-2.5 h-2.5 rounded-full bg-[#1a3b5c]" />}
       </div>
-      <span className="text-white text-lg font-bold font-arabic">{label}</span>
+      <span className="text-[#1a3b5c] text-lg font-bold font-arabic">{label}</span>
     </button>
   );
 }
 
-export default function SettingsClient() {
-  const [emailNotifs, setEmailNotifs] = useState(true);
-  const [siteNotifs, setSiteNotifs] = useState(false);
-  const [language, setLanguage] = useState<"ar" | "en">("ar");
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+export default function SettingsClient({ initialSettings }: SettingsClientProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+
+  const [settings, setSettings] = useState(initialSettings);
+
+  const handleUpdateSetting = (update: Partial<typeof settings>) => {
+    const newSettings = { ...settings, ...update };
+    setSettings(newSettings);
+    
+    startTransition(async () => {
+      const result = await updateUserSettingsAction(update as any);
+      if (result.error) {
+        toast.error(result.error);
+        setSettings(settings); // Rollback
+      } else {
+        toast.success("تم تحديث الإعدادات");
+      }
+    });
+  };
+
+  const handleLogout = () => {
+    startTransition(async () => {
+      await logoutAction();
+    });
+  };
 
   return (
-    <div
-      className="flex flex-col px-5 pt-8 pb-10 gap-6 w-full max-w-md mx-auto"
-      dir="rtl"
-    >
-      <h1 className="text-white text-3xl font-bold font-arabic text-center mb-2">
+    <div className="flex flex-col px-5 pt-8 pb-10 gap-6 w-full max-w-[430px] mx-auto min-h-screen bg-[#1a3b5c]" dir="rtl">
+      <h1 className="text-white text-3xl font-bold font-arabic text-center mb-4">
         الاعدادات
       </h1>
 
       {/* Account Settings */}
-      <div className="bg-white rounded-[25px] p-4 shadow-md flex flex-col gap-3">
-        <h2 className="text-[#1a3b5c] text-xl font-bold font-arabic px-2">
-          اعدادات الحساب :
-        </h2>
-        <div className="bg-[#ffb755] rounded-[20px] p-4 flex flex-col gap-3">
-          <div className="flex items-center justify-between py-1">
+      <SectionCard title="اعدادات الحساب :">
+        <div className="flex items-center justify-between py-1">
+          <div className="flex items-center gap-3 order-2">
             <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
               تغيير كلمة المرور
             </span>
-            <button
-              type="button"
-              className="flex items-center justify-center transition-opacity hover:opacity-70"
-            >
-              <EditIcon />
-            </button>
+            <Lock size={20} className="text-[#1a3b5c]" />
           </div>
-          <div className="h-px w-full bg-[#1a3b5c]/10"></div>
-          <div className="flex items-center justify-between py-1">
+          <button
+            type="button"
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="p-1 hover:opacity-70 transition-opacity"
+          >
+            <Pencil size={20} className="text-[#1a3b5c]" />
+          </button>
+        </div>
+        
+        <div className="h-px w-full bg-[#1a3b5c]/10"></div>
+        
+        <div className="flex items-center justify-between py-1">
+          <div className="flex items-center gap-3 order-2">
             <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
               تغيير الايميل
             </span>
-            <button
-              type="button"
-              className="flex items-center justify-center transition-opacity hover:opacity-70"
-            >
-              <EditIcon />
-            </button>
+            <Mail size={20} className="text-[#1a3b5c]" />
           </div>
+          <button
+            type="button"
+            onClick={() => setIsEmailModalOpen(true)}
+            className="p-1 hover:opacity-70 transition-opacity"
+          >
+            <Pencil size={20} className="text-[#1a3b5c]" />
+          </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Notifications */}
-      <div className="bg-white rounded-[25px] p-4 shadow-md flex flex-col gap-3">
-        <div className="bg-[#ffb755] rounded-[20px] p-4 flex flex-col gap-2">
-          <Toggle
-            label="إشعارات البريد"
-            isOn={emailNotifs}
-            onToggle={() => setEmailNotifs(!emailNotifs)}
-          />
-          <div className="h-px w-full bg-[#1a3b5c]/10"></div>
-          <Toggle
-            label="التنبيهات داخل الموقع"
-            isOn={siteNotifs}
-            onToggle={() => setSiteNotifs(!siteNotifs)}
-          />
+      <SectionCard title="إعدادات الإشعارات:">
+        <Toggle
+          label="إشعارات البريد"
+          icon={Mail}
+          isOn={settings.emailNotifications}
+          onToggle={() => handleUpdateSetting({ emailNotifications: !settings.emailNotifications })}
+          isPending={isPending}
+        />
+        <div className="h-px w-full bg-[#1a3b5c]/10"></div>
+        <Toggle
+          label="التنبيهات داخل الموقع"
+          icon={Bell}
+          isOn={settings.siteNotifications}
+          onToggle={() => handleUpdateSetting({ siteNotifications: !settings.siteNotifications })}
+          isPending={isPending}
+        />
+      </SectionCard>
+
+      {/* Interface Settings */}
+      <SectionCard title="إعدادات الواجهة:">
+        <div className="flex items-center justify-between w-full py-1">
+          <div className="flex items-center gap-3 order-2">
+            <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
+              اختيار اللغة
+            </span>
+            <Globe size={20} className="text-[#1a3b5c]" />
+          </div>
+          <div className="flex gap-4">
+            <RadioOption
+              label="English"
+              selected={settings.language === "en"}
+              onSelect={() => handleUpdateSetting({ language: "en" })}
+              isPending={isPending}
+            />
+            <RadioOption
+              label="عربي"
+              selected={settings.language === "ar"}
+              onSelect={() => handleUpdateSetting({ language: "ar" })}
+              isPending={isPending}
+            />
+          </div>
         </div>
+        
+        <div className="h-px w-full bg-[#1a3b5c]/10"></div>
+
+        <div className="flex items-center justify-between w-full py-1">
+          <div className="flex items-center gap-3 order-2">
+            <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
+              ثيم الموقع
+            </span>
+            <div className="text-[#1a3b5c]">
+              {settings.theme === "light" ? <Sun size={20} /> : <Moon size={20} />}
+            </div>
+          </div>
+          <div className="flex gap-4">
+             <RadioOption
+              label="ليلي"
+              selected={settings.theme === "dark"}
+              onSelect={() => handleUpdateSetting({ theme: "dark" })}
+              isPending={isPending}
+            />
+            <RadioOption
+              label="نهاري"
+              selected={settings.theme === "light"}
+              onSelect={() => handleUpdateSetting({ theme: "light" })}
+              isPending={isPending}
+            />
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* Logout */}
+      <div className="bg-white rounded-[35px] p-5 shadow-lg flex flex-col gap-4 w-full mb-10">
+        <h2 className="text-[#1a3b5c] text-xl font-bold font-arabic text-right px-2">
+          الحساب :
+        </h2>
+        <button
+          onClick={handleLogout}
+          disabled={isPending}
+          className="bg-[#ffb755] rounded-[25px] p-5 flex items-center justify-between shadow-inner hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          <div className="text-white">
+            <ChevronLeft size={24} />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[#1a3b5c] text-xl font-bold font-arabic">
+              تسجيل الخروج
+            </span>
+            <LogOut size={24} className="text-white" />
+          </div>
+        </button>
       </div>
 
-      {/* Language */}
-      <div className="bg-white rounded-[25px] p-4 shadow-md flex flex-col gap-3">
-        <div className="bg-[#ffb755] rounded-[20px] p-4 flex justify-around items-center">
-          <RadioOption
-            label="عربي"
-            selected={language === "ar"}
-            onSelect={() => setLanguage("ar")}
-          />
-          <RadioOption
-            label="English"
-            selected={language === "en"}
-            onSelect={() => setLanguage("en")}
-          />
-        </div>
-      </div>
+      {/* Modals */}
+      {isPasswordModalOpen && (
+        <ChangePasswordModal 
+          onClose={() => setIsPasswordModalOpen(false)} 
+        />
+      )}
+      {isEmailModalOpen && (
+        <ChangeEmailModal 
+          currentEmail={settings.email}
+          onClose={() => setIsEmailModalOpen(false)} 
+          onSuccess={(newEmail) => setSettings({ ...settings, email: newEmail })}
+        />
+      )}
+    </div>
+  );
+}
 
-      {/* Theme */}
-      <div className="bg-white rounded-[25px] p-4 shadow-md flex flex-col gap-3">
-        {/* Note: In the design the theme section has an inner shadow on the orange box */}
-        <div className="bg-[#ffb755] rounded-[20px] p-4 flex justify-around items-center shadow-[inset_0px_4px_4px_rgba(0,0,0,0.1)]">
-          <RadioOption
-            label="نهاري"
-            selected={theme === "light"}
-            onSelect={() => setTheme("light")}
-          />
-          <RadioOption
-            label="ليلي"
-            selected={theme === "dark"}
-            onSelect={() => setTheme("dark")}
-          />
-        </div>
+function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+  const [isPending, startTransition] = useTransition();
+  const { register, handleSubmit, formState: { errors } } = useForm<ChangePasswordInput>({
+    resolver: zodResolver(changePasswordSchema)
+  });
+
+  const onSubmit = (data: ChangePasswordInput) => {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("currentPassword", data.currentPassword);
+      formData.append("newPassword", data.newPassword);
+      formData.append("confirmPassword", data.confirmPassword);
+
+      const result = await changePasswordAction(formData);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("تم تغيير كلمة المرور بنجاح");
+        onClose();
+      }
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" dir="rtl">
+      <div className="w-full max-w-md rounded-[30px] bg-white p-8 shadow-2xl relative">
+        <button 
+          onClick={onClose}
+          className="absolute top-6 left-6 text-[#1a3b5c] hover:opacity-70"
+        >
+          <X size={24} />
+        </button>
+        
+        <h3 className="mb-6 text-2xl font-bold text-[#1a3b5c] font-arabic">
+          تغيير كلمة المرور
+        </h3>
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-[#1a3b5c] font-bold font-arabic">كلمة المرور الحالية</label>
+            <input
+              type="password"
+              {...register("currentPassword")}
+              className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ffb755]"
+            />
+            {errors.currentPassword && (
+              <p className="text-sm text-red-500 font-arabic">{errors.currentPassword.message}</p>
+            )}
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <label className="text-[#1a3b5c] font-bold font-arabic">كلمة المرور الجديدة</label>
+            <input
+              type="password"
+              {...register("newPassword")}
+              className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ffb755]"
+            />
+            {errors.newPassword && (
+              <p className="text-sm text-red-500 font-arabic">{errors.newPassword.message}</p>
+            )}
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <label className="text-[#1a3b5c] font-bold font-arabic">تأكيد كلمة المرور الجديدة</label>
+            <input
+              type="password"
+              {...register("confirmPassword")}
+              className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ffb755]"
+            />
+            {errors.confirmPassword && (
+              <p className="text-sm text-red-500 font-arabic">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+          
+          <Button 
+            type="submit" 
+            disabled={isPending}
+            className="mt-4 bg-[#1a3b5c] hover:bg-[#1a3b5c]/90 text-white rounded-xl py-6 text-lg font-bold font-arabic"
+          >
+            {isPending ? <Loader2 className="animate-spin" /> : "تحديث كلمة المرور"}
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ChangeEmailModal({ 
+  currentEmail, 
+  onClose, 
+  onSuccess 
+}: { 
+  currentEmail: string; 
+  onClose: () => void;
+  onSuccess: (email: string) => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const { register, handleSubmit, formState: { errors } } = useForm<ChangeEmailInput>({
+    resolver: zodResolver(changeEmailSchema),
+    defaultValues: { newEmail: currentEmail }
+  });
+
+  const onSubmit = (data: ChangeEmailInput) => {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("newEmail", data.newEmail);
+
+      const result = await changeEmailAction(formData);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("تم تغيير البريد الإلكتروني بنجاح");
+        onSuccess(data.newEmail);
+        onClose();
+      }
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" dir="rtl">
+      <div className="w-full max-w-md rounded-[30px] bg-white p-8 shadow-2xl relative">
+        <button 
+          onClick={onClose}
+          className="absolute top-6 left-6 text-[#1a3b5c] hover:opacity-70"
+        >
+          <X size={24} />
+        </button>
+        
+        <h3 className="mb-6 text-2xl font-bold text-[#1a3b5c] font-arabic">
+          تغيير البريد الإلكتروني
+        </h3>
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-[#1a3b5c] font-bold font-arabic">البريد الإلكتروني الجديد</label>
+            <input
+              type="email"
+              {...register("newEmail")}
+              className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ffb755]"
+            />
+            {errors.newEmail && (
+              <p className="text-sm text-red-500 font-arabic">{errors.newEmail.message}</p>
+            )}
+          </div>
+          
+          <Button 
+            type="submit" 
+            disabled={isPending}
+            className="mt-4 bg-[#1a3b5c] hover:bg-[#1a3b5c]/90 text-white rounded-xl py-6 text-lg font-bold font-arabic"
+          >
+            {isPending ? <Loader2 className="animate-spin" /> : "تحديث البريد الإلكتروني"}
+          </Button>
+        </form>
       </div>
     </div>
   );

@@ -93,3 +93,20 @@ export async function confirmStepAction(stepOrder: number) {
     return { error: "حدث خطأ أثناء تأكيد الخطوة" };
   }
 }
+
+export async function getUnreadNotificationsCount() {
+  const session = await auth();
+  if (!session?.user?.id) return 0;
+
+  try {
+    return await prisma.notification.count({
+      where: {
+        userId: session.user.id,
+        isRead: false,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching unread notifications count:", error);
+    return 0;
+  }
+}
