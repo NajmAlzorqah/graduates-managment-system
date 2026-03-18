@@ -77,6 +77,7 @@ export async function getStudents(): Promise<Student[]> {
     academicId: u.academicId,
     department: u.studentProfile?.major ?? "",
     status: u.isApproved ? ("active" as const) : ("suspended" as const),
+    avatarUrl: u.image,
   }));
 }
 
@@ -98,11 +99,13 @@ export async function getStudentById(
     isApproved: user.isApproved,
     role: "STUDENT",
     createdAt: user.createdAt,
+    image: user.image,
     profile: user.studentProfile
       ? {
           studentCardNumber: user.studentProfile.studentCardNumber,
           major: user.studentProfile.major,
           graduationYear: user.studentProfile.graduationYear,
+          phone: user.studentProfile.phone,
         }
       : null,
   };
@@ -160,11 +163,13 @@ export async function createStudent(
     isApproved: user.isApproved,
     role: "STUDENT",
     createdAt: user.createdAt,
+    image: user.image,
     profile: user.studentProfile
       ? {
           studentCardNumber: user.studentProfile.studentCardNumber,
           major: user.studentProfile.major,
           graduationYear: user.studentProfile.graduationYear,
+          phone: user.studentProfile.phone,
         }
       : null,
   };
@@ -202,11 +207,13 @@ export async function updateStudent(
     isApproved: user.isApproved,
     role: "STUDENT",
     createdAt: user.createdAt,
+    image: user.image,
     profile: user.studentProfile
       ? {
           studentCardNumber: user.studentProfile.studentCardNumber,
           major: user.studentProfile.major,
           graduationYear: user.studentProfile.graduationYear,
+          phone: user.studentProfile.phone,
         }
       : null,
   };
@@ -236,6 +243,7 @@ export async function getUnapprovedStudents(): Promise<Student[]> {
     academicId: u.academicId,
     department: u.studentProfile?.major ?? "",
     status: "suspended" as const,
+    avatarUrl: u.image,
   }));
 }
 

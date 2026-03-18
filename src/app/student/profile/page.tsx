@@ -17,6 +17,8 @@ export default async function StudentProfilePage() {
       email={student.email}
       academicId={student.academicId}
       studentCardNumber={student.profile?.studentCardNumber ?? ""}
+      phone={student.profile?.phone ?? ""}
+      avatarUrl={student.image ?? ""}
     />
   );
 }

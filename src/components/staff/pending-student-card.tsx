@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useTransition } from "react";
 import toast from "react-hot-toast";
 import {
@@ -12,17 +13,27 @@ interface PendingStudentCardProps {
   student: Student;
 }
 
-function StudentAvatar() {
+function StudentAvatar({ avatarUrl, name }: { avatarUrl?: string | null; name: string }) {
   return (
-    <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-[#1a3b5c] md:h-[100px] md:w-[100px] xl:h-[131px] xl:w-[131px]">
-      <svg
-        viewBox="0 0 24 24"
-        className="h-10 w-10 md:h-14 md:w-14 xl:h-[84px] xl:w-[84px]"
-        fill="#ffffff"
-        aria-hidden="true"
-      >
-        <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.64 0-8.4 2.9-8.4 6.48A1.52 1.52 0 0 0 5.12 22h13.76a1.52 1.52 0 0 0 1.52-1.52C20.4 16.9 16.64 14 12 14Z" />
-      </svg>
+    <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-[#1a3b5c] md:h-[100px] md:w-[100px] xl:h-[131px] xl:w-[131px] relative overflow-hidden">
+      {avatarUrl ? (
+        <Image 
+          src={avatarUrl} 
+          alt={name} 
+          fill 
+          className="object-cover"
+          unoptimized
+        />
+      ) : (
+        <svg
+          viewBox="0 0 24 24"
+          className="h-10 w-10 md:h-14 md:w-14 xl:h-[84px] xl:w-[84px]"
+          fill="#ffffff"
+          aria-hidden="true"
+        >
+          <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.64 0-8.4 2.9-8.4 6.48A1.52 1.52 0 0 0 5.12 22h13.76a1.52 1.52 0 0 0 1.52-1.52C20.4 16.9 16.64 14 12 14Z" />
+        </svg>
+      )}
     </div>
   );
 }
@@ -93,7 +104,7 @@ export default function PendingStudentCard({
       dir="rtl"
     >
       {/* Avatar — rightmost in RTL */}
-      <StudentAvatar />
+      <StudentAvatar avatarUrl={student.avatarUrl} name={student.name || ""} />
 
       {/* Student info — flex-1 in the middle, right-aligned text */}
       <div className="flex min-w-0 flex-1 flex-col items-end gap-0.5 text-right md:gap-1">

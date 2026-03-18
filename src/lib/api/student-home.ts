@@ -33,6 +33,7 @@ export async function getStudentHomeData(
       id: user.id,
       nameAr: user.nameAr ?? user.name ?? "",
       department: user.studentProfile?.major ?? "",
+      avatarUrl: user.image,
     },
     certificateSteps: user.certificateSteps.map((s) => ({
       id: s.id,

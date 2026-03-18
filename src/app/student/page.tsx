@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import CertificateStatusCard from "@/components/student/certificate-status-card";
 import DocumentsStatusCard from "@/components/student/documents-status-card";
@@ -49,8 +50,18 @@ export default async function StudentHomePage() {
       {/* Profile Header */}
       <div className="flex items-center gap-4 px-5 pt-10 pb-4" dir="rtl">
         {/* Avatar — first child in RTL flex-row = right side */}
-        <div className="w-20 h-20 rounded-full bg-[#ffb755] flex items-center justify-center shrink-0 shadow-md">
-          <UserAvatarIcon className="w-10 h-10 text-[#1a3b5c]" />
+        <div className="w-20 h-20 rounded-full bg-[#ffb755] flex items-center justify-center shrink-0 shadow-md relative overflow-hidden">
+          {profile.avatarUrl ? (
+            <Image 
+              src={profile.avatarUrl} 
+              alt={profile.nameAr} 
+              fill 
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <UserAvatarIcon className="w-10 h-10 text-[#1a3b5c]" />
+          )}
         </div>
         {/* Name & Department */}
         <div className="flex flex-col gap-1 min-w-0">

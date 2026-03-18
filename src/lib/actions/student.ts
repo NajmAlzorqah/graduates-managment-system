@@ -1,5 +1,7 @@
 "use server";
 
+import { mkdir, writeFile, rm } from "node:fs/promises";
+import { join } from "node:path";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -9,9 +11,10 @@ const updateOwnProfileSchema = z.object({
   nameAr: z.string().trim().min(1, "الاسم مطلوب").optional(),
   email: z.string().email("بريد إلكتروني غير صالح").optional(),
   studentCardNumber: z.string().trim().optional(),
+  phone: z.string().trim().optional(),
 });
 
-type UpdateProfileResult = { success?: true; error?: string };
+type UpdateProfileResult = { success?: boolean; error?: string };
 
 export async function updateOwnProfileAction(
   _prevState: { success?: boolean; error?: string },
@@ -20,11 +23,18 @@ export async function updateOwnProfileAction(
   const session = await auth();
   if (!session?.user?.id) return { error: "غير مصرح" };
 
+  const nameAr = formData.get("nameAr")?.toString();
+  const email = formData.get("email")?.toString();
+  const studentCardNumber = formData.get("studentCardNumber")?.toString();
+  const phone = formData.get("phone")?.toString();
+  const imageFile = formData.get("image") as File | null;
+  const deleteImage = formData.get("deleteImage") === "true";
+
   const rawData = {
-    nameAr: formData.get("nameAr")?.toString() || undefined,
-    email: formData.get("email")?.toString() || undefined,
-    studentCardNumber:
-      formData.get("studentCardNumber")?.toString() ?? undefined,
+    nameAr: nameAr || undefined,
+    email: email || undefined,
+    studentCardNumber: studentCardNumber || undefined,
+    phone: phone || undefined,
   };
 
   const parsed = updateOwnProfileSchema.safeParse(rawData);
@@ -32,38 +42,76 @@ export async function updateOwnProfileAction(
     return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
   }
 
-  const { nameAr, email, studentCardNumber } = parsed.data;
+  const userId = session.user.id;
 
   try {
+    let imageUrl: string | null | undefined;
+
+    if (deleteImage) {
+      // Get current image to delete from filesystem
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { image: true },
+      });
+
+      if (user?.image?.startsWith("/api/uploads/")) {
+        const relativePath = user.image.replace("/api/uploads/", "");
+        const fullPath = join(process.cwd(), "uploads", relativePath);
+        await rm(fullPath, { force: true });
+      }
+      imageUrl = null;
+    } else if (imageFile && imageFile.size > 0) {
+      const bytes = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      const userDir = join(process.cwd(), "uploads", userId);
+      await mkdir(userDir, { recursive: true });
+
+      const safeFileName = `avatar-${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const filePath = join(userDir, safeFileName);
+      await writeFile(filePath, buffer);
+
+      imageUrl = `/api/uploads/${userId}/${safeFileName}`;
+    }
+
     if (email) {
       const existing = await prisma.user.findFirst({
-        where: { email, NOT: { id: session.user.id } },
+        where: { email, NOT: { id: userId } },
       });
       if (existing) return { error: "البريد الإلكتروني مستخدم بالفعل" };
     }
 
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: {
         ...(nameAr !== undefined && { nameAr }),
         ...(email !== undefined && { email }),
+        ...(imageUrl !== undefined && { image: imageUrl }),
       },
     });
 
-    if (studentCardNumber !== undefined) {
+    if (studentCardNumber !== undefined || phone !== undefined) {
       await prisma.studentProfile.upsert({
-        where: { userId: session.user.id },
-        update: { studentCardNumber: studentCardNumber || null },
+        where: { userId: userId },
+        update: {
+          ...(studentCardNumber !== undefined && {
+            studentCardNumber: studentCardNumber || null,
+          }),
+          ...(phone !== undefined && { phone: phone || null }),
+        },
         create: {
-          userId: session.user.id,
+          userId: userId,
           studentCardNumber: studentCardNumber || null,
+          phone: phone || null,
+          major: "",
         },
       });
     }
 
     revalidatePath("/student/profile");
     return { success: true };
-  } catch {
+  } catch (error) {
+    console.error("Error updating profile:", error);
     return { error: "حدث خطأ أثناء تحديث البيانات" };
   }
 }
@@ -78,12 +126,14 @@ export async function updateStudentDataAction(data: {
   const session = await auth();
   if (!session?.user?.id) return { error: "غير مصرح" };
 
+  const userId = session.user.id;
+
   try {
     await prisma.$transaction(async (tx) => {
       // Update User info
       if (data.nameAr || data.name) {
         await tx.user.update({
-          where: { id: session.user.id },
+          where: { id: userId },
           data: {
             ...(data.nameAr && { nameAr: data.nameAr }),
             ...(data.name && { name: data.name }),
@@ -94,7 +144,7 @@ export async function updateStudentDataAction(data: {
       // Update Student Profile
       if (data.major || data.studentCardNumber || data.graduationYear) {
         await tx.studentProfile.upsert({
-          where: { userId: session.user.id },
+          where: { userId: userId },
           update: {
             ...(data.major && { major: data.major }),
             ...(data.studentCardNumber && {
@@ -103,7 +153,7 @@ export async function updateStudentDataAction(data: {
             ...(data.graduationYear && { graduationYear: data.graduationYear }),
           },
           create: {
-            userId: session.user.id,
+            userId: userId,
             major: data.major || "",
             studentCardNumber: data.studentCardNumber || null,
             graduationYear: data.graduationYear || null,

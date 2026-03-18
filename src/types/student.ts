@@ -5,6 +5,7 @@ export type Student = {
   academicId: string;
   department: string;
   status: "active" | "graduated" | "suspended";
+  avatarUrl?: string | null;
 };
 
 export type StudentWithProfile = {
@@ -16,10 +17,12 @@ export type StudentWithProfile = {
   isApproved: boolean;
   role: "STUDENT";
   createdAt: Date;
+  image: string | null;
   profile: {
     studentCardNumber: string | null;
     major: string | null;
     graduationYear: number | null;
+    phone: string | null;
   } | null;
 };
 
@@ -39,6 +42,7 @@ export type StudentProfile = {
   id: string;
   nameAr: string;
   department: string;
+  avatarUrl?: string | null;
 };
 
 export type StudentHomeData = {
