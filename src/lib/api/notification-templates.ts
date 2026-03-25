@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import type { NotificationTemplate } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export async function getNotificationTemplates(): Promise<
   NotificationTemplate[]

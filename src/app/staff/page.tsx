@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import StaffTodoList from "@/components/staff/staff-todo-list";
 import { getStaffHomeData } from "@/lib/api/staff-home";
+import { auth } from "@/lib/auth";
 
 type MetricCardProps = {
   title: string;
@@ -34,17 +36,22 @@ function MetricCard({ title, value, icon }: MetricCardProps) {
 }
 
 export default async function StaffDashboardPage() {
-  const { stats, todoItems } = await getStaffHomeData();
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const { stats, todoItems } = await getStaffHomeData(session.user.id);
 
   return (
     <div className="flex flex-col gap-5 md:gap-6 xl:gap-7">
-      {/* ── Metric cards ── */}
+      {/* Metric cards */}
       <section
         className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-5 xl:gap-6"
         aria-label="Statistics"
       >
         <MetricCard
-          title="عدد الطلاب المسجلين اليوم"
+          title="الطلاب المسجلين اليوم"
           value={stats.registeredTodayCount}
           icon={
             <svg
@@ -59,7 +66,7 @@ export default async function StaffDashboardPage() {
         />
 
         <MetricCard
-          title="عدد الشهادات قيد المراجعة"
+          title="الشهادات قيد المراجعة"
           value={stats.certificatesUnderReviewCount}
           icon={
             <svg
@@ -78,7 +85,7 @@ export default async function StaffDashboardPage() {
         />
 
         <MetricCard
-          title="عدد الشهادات المصادق عليها"
+          title="الشهادات المعتمدة"
           value={stats.certificatesApprovedCount}
           icon={
             <svg
@@ -93,8 +100,14 @@ export default async function StaffDashboardPage() {
         />
       </section>
 
-      {/* ── To-do list ── */}
-      <StaffTodoList initialTodos={todoItems} />
+      {/* To-do list */}
+      <StaffTodoList
+        initialTodos={todoItems}
+        currentUserId={session.user.id}
+        staffMembers={[
+          { id: session.user.id, name: session.user.name || "Me" },
+        ]}
+      />
     </div>
   );
 }

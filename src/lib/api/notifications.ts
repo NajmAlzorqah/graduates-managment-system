@@ -114,11 +114,13 @@ export async function getNotificationsWithUsers(): Promise<
     if (group.length > 1) {
       const base = group[0];
       const isAll = group.length >= totalStudents && totalStudents > 0;
-      
+
       result.push({
         ...base,
         user: {
-          nameAr: isAll ? "الكل (Sent to all)" : `مجموعة (${group.length} طلاب)`,
+          nameAr: isAll
+            ? "الكل (Sent to all)"
+            : `مجموعة (${group.length} طلاب)`,
           role: isAll ? "ALL" : "GROUP",
         },
       });
@@ -218,7 +220,9 @@ export async function deleteNotification(
   });
 }
 
-export async function deleteAllUserNotifications(userId: string): Promise<void> {
+export async function deleteAllUserNotifications(
+  userId: string,
+): Promise<void> {
   await prisma.notification.deleteMany({
     where: { userId },
   });

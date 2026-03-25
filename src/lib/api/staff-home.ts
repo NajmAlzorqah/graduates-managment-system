@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { StaffHomeData, StaffTodoItem } from "@/types/staff";
 
-function getDayBounds(input: Date): { start: Date; end: Date } {
+function getDayBounds(input: Date): { start: Date; end: Date } {  
   const start = new Date(input);
   start.setHours(0, 0, 0, 0);
 
@@ -11,27 +11,7 @@ function getDayBounds(input: Date): { start: Date; end: Date } {
   return { start, end };
 }
 
-function getFallbackTodoItems(): StaffTodoItem[] {
-  return [
-    {
-      id: "fallback-1",
-      label: "استعادة شهادة صالح المصلوح من التعليم العالي",
-      completed: false,
-    },
-    {
-      id: "fallback-2",
-      label: "استعادة شهادة صالح المصلوح من التعليم العالي",
-      completed: false,
-    },
-    {
-      id: "fallback-3",
-      label: "استعادة شهادة صالح المصلوح من التعليم العالي",
-      completed: false,
-    },
-  ];
-}
-
-export async function getStaffHomeData(): Promise<StaffHomeData> {
+export async function getStaffHomeData(staffId?: string): Promise<StaffHomeData> {
   const now = new Date();
   const { start, end } = getDayBounds(now);
 
@@ -40,7 +20,7 @@ export async function getStaffHomeData(): Promise<StaffHomeData> {
     certificatesUnderReviewCount,
     certificatesApprovedCount,
     certificatesDeliveredCount,
-    pendingSteps,
+    todos,
   ] = await Promise.all([
     prisma.user.count({
       where: {
@@ -62,37 +42,33 @@ export async function getStaffHomeData(): Promise<StaffHomeData> {
       },
     }),
     prisma.certificate.count(),
-    prisma.certificateStep.findMany({
-      where: {
-        status: {
-          in: ["PENDING", "IN_PROGRESS"],
-        },
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            nameAr: true,
+    staffId 
+      ? prisma.todo.findMany({
+          where: {
+            staffId,
           },
-        },
-      },
-      orderBy: [{ status: "desc" }, { updatedAt: "asc" }],
-      take: 4,
-    }),
+          include: {
+            staff: {
+              select: {
+                name: true,
+                nameAr: true,
+              }
+            }
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        })
+      : Promise.resolve([]),
   ]);
 
-  const todoItems =
-    pendingSteps.length > 0
-      ? pendingSteps.map((step) => {
-          const studentName = step.user.nameAr ?? step.user.name ?? "طالب";
-
-          return {
-            id: step.id,
-            label: `${step.label} - ${studentName}`,
-            completed: false,
-          };
-        })
-      : getFallbackTodoItems();
+  const todoItems: StaffTodoItem[] = (todos as any[]).map((todo) => ({
+    id: todo.id,
+    title: todo.title,
+    completed: todo.completed,
+    staffId: todo.staffId,
+    staffName: todo.staff.nameAr || todo.staff.name || "Unknown",
+  }));
 
   return {
     stats: {

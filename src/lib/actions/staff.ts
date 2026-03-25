@@ -93,13 +93,17 @@ export async function updateStaffPassword(formData: FormData) {
 }
 
 const updatePreferencesSchema = z.object({
-  emailNotifications: z.enum(["on", "off"]),
-  siteNotifications: z.enum(["on", "off"]),
+  emailNotifications: z.enum(["on", "off"]).optional(),
+  siteNotifications: z.enum(["on", "off"]).optional(),
+  language: z.enum(["ar", "en"]).optional(),
+  theme: z.enum(["light", "dark"]).optional(),
 });
 
 export async function updateStaffPreferences(prefs: {
-  emailNotifications: "on" | "off";
-  siteNotifications: "on" | "off";
+  emailNotifications?: "on" | "off";
+  siteNotifications?: "on" | "off";
+  language?: "ar" | "en";
+  theme?: "light" | "dark";
 }) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "STAFF") {
@@ -112,12 +116,23 @@ export async function updateStaffPreferences(prefs: {
   }
 
   try {
+    const data: any = {};
+    if (prefs.emailNotifications) {
+      data.emailNotifications = prefs.emailNotifications === "on";
+    }
+    if (prefs.siteNotifications) {
+      data.siteNotifications = prefs.siteNotifications === "on";
+    }
+    if (prefs.language) {
+      data.language = prefs.language;
+    }
+    if (prefs.theme) {
+      data.theme = prefs.theme;
+    }
+
     await prisma.user.update({
       where: { id: session.user.id },
-      data: {
-        emailNotifications: prefs.emailNotifications === "on",
-        siteNotifications: prefs.siteNotifications === "on",
-      },
+      data,
     });
 
     revalidatePath("/staff/settings");
@@ -148,13 +163,38 @@ export async function getStaffSettings() {
     if (!user) return null;
 
     return {
-      emailNotifications: (user.emailNotifications ? "on" : "off") as "on" | "off",
-      siteNotifications: (user.siteNotifications ? "on" : "off") as "on" | "off",
+      emailNotifications: (user.emailNotifications ? "on" : "off") as
+        | "on"
+        | "off",
+      siteNotifications: (user.siteNotifications ? "on" : "off") as
+        | "on"
+        | "off",
       language: user.language as "ar" | "en",
       theme: user.theme as "light" | "dark",
     };
   } catch (error) {
     console.error("Error fetching staff settings:", error);
     return null;
+  }
+}
+
+export async function markNewStudentsAsSeen() {
+  const session = await auth();
+  if (
+    !session?.user?.id ||
+    (session.user.role !== "STAFF" && session.user.role !== "ADMIN")
+  ) {
+    return { error: "Not authenticated" };
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { lastCheckedNewStudentsAt: new Date() },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating lastCheckedNewStudentsAt:", error);
+    return { error: "Failed to update last checked time." };
   }
 }

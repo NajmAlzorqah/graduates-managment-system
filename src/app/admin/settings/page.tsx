@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import AdminSettingsForm from "@/components/admin/admin-settings-form";
-import { auth } from "@/lib/auth";
 import { getAdminSettings } from "@/lib/actions/admin";
+import { auth } from "@/lib/auth";
 
 export default async function AdminSettingsPage() {
   const session = await auth();

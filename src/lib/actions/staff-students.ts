@@ -3,13 +3,16 @@
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { updateStepStatus } from "@/lib/api/certificate-steps";
+import { createNotification } from "@/lib/api/notifications";
 import {
   approveStudent,
   createStaffUser,
   createStudent,
   deleteStudent,
+  getStudentById,
 } from "@/lib/api/students";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { updateStepStatusSchema } from "@/lib/validations/certificate-step";
 import {
   createStaffUserSchema,
@@ -161,10 +164,83 @@ export async function updateStepStatusAction(
   }
 
   try {
-    await updateStepStatus(stepId, parsed.data.status, session.user.id);
+    const step = await prisma.certificateStep.findUnique({
+      where: { id: stepId },
+      select: {
+        id: true,
+        label: true,
+        userId: true,
+        status: true,
+        order: true,
+      },
+    });
+
+    if (!step) return { success: false, error: "الخطوة غير موجودة" };
+
+    const isVerificationStep =
+      step.label === "مراجعة البيانات وتأكيدها" || step.order === 2;
+    const nextStatus = parsed.data.status;
+
+    // Workflow Part 1: Verify Button (Step 2)
+    // If staff clicks "Approve" (nextStatus === COMPLETED) on step 2,
+    // we check if it's currently in a state that implies student has responded.
+    // If it's NOT in MODIFIED state, it means it's the INITIAL "Verify" click.
+    if (
+      isVerificationStep &&
+      nextStatus === "COMPLETED" &&
+      step.status !== "MODIFIED"
+    ) {
+      const student = await getStudentById(step.userId);
+      if (student) {
+        const dataMessage = `يرجى مراجعة بياناتك التالية وتأكيدها:
+الاسم بالعربي: ${student.nameAr || "—"}
+الاسم بالإنجليزي: ${student.name || "—"}
+التخصص: ${student.profile?.major || "—"}
+رقم البطاقة الجامعية: ${student.profile?.studentCardNumber || "—"}
+سنة التخرج: ${student.profile?.graduationYear || "—"}`;
+
+        // Send notification to student with their form data
+        await createNotification(
+          session.user.id,
+          step.userId,
+          "مراجعة وتأكيد البيانات",
+          dataMessage,
+        );
+
+        // Update to NEEDS_VERIFICATION. Status NOT COMPLETED yet.
+        await updateStepStatus(stepId, "NEEDS_VERIFICATION", session.user.id);
+
+        revalidatePath("/staff/certificates");
+        revalidatePath("/student");
+        return { success: true };
+      }
+    }
+
+    // Standard Update (including final manual approval of step 2)
+    await updateStepStatus(stepId, nextStatus, session.user.id);
+
+    // Workflow Part 2: Automatic notification for any manual update
+    const statusLabels: Record<string, string> = {
+      COMPLETED: "مكتملة",
+      IN_PROGRESS: "قيد التنفيذ",
+      PENDING: "قيد الانتظار",
+      NEEDS_VERIFICATION: "تحتاج لمراجعة",
+      MODIFIED: "تم التعديل",
+      REJECTED: "مرفوضة",
+    };
+
+    await createNotification(
+      session.user.id,
+      step.userId,
+      `تحديث حالة الشهادة: ${step.label}`,
+      `تم تحديث حالة خطوة "${step.label}" إلى: ${statusLabels[nextStatus] || nextStatus}`,
+    );
+
     revalidatePath("/staff/certificates");
+    revalidatePath("/student");
     return { success: true };
-  } catch {
+  } catch (error) {
+    console.error("Error updating step status:", error);
     return { success: false, error: "خطأ في تحديث الحالة" };
   }
 }

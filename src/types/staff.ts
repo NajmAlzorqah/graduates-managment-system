@@ -1,7 +1,9 @@
 export type StaffTodoItem = {
   id: string;
-  label: string;
+  title: string;
   completed: boolean;
+  staffId: string;
+  staffName?: string;
 };
 
 export type StaffHomeStats = {

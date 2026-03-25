@@ -15,7 +15,7 @@ export async function DELETE() {
     console.error("Failed to delete notifications:", error);
     return NextResponse.json(
       { error: "Failed to delete notifications" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -3,14 +3,17 @@
 import { motion } from "framer-motion";
 import {
   Bell,
-  Languages,
+  Download,
+  Globe,
   LockKeyhole,
   Mail,
+  Moon,
   PenLine,
-  SunMedium,
+  Sun,
+  User,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useEffect, useState, useTransition, useOptimistic } from "react";
+import { useEffect, useOptimistic, useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
 import AnimatedSwitch from "@/components/ui/animated-switch";
@@ -33,7 +36,7 @@ type StaffSettingsState = {
 const DEFAULT_SETTINGS: StaffSettingsState = {
   emailNotifications: "on",
   siteNotifications: "on",
-  language: "ar",
+  language: "en",
   theme: "light",
 };
 
@@ -43,22 +46,17 @@ const SWITCH_OPTIONS = {
     { label: "off", value: "off" },
   ] as const,
   language: [
-    { label: "عربي", value: "ar" },
+    { label: "Arabic", value: "ar" },
     { label: "English", value: "en" },
   ] as const,
   theme: [
-    { label: "فاتح", value: "light" },
-    { label: "داكن", value: "dark" },
+    { label: "Light", value: "light" },
+    { label: "Dark", value: "dark" },
   ] as const,
 };
 
 function applyDocumentPreferences(settings: Partial<StaffSettingsState>) {
   if (typeof document === "undefined") return;
-  if (settings.language) {
-    const isArabic = settings.language === "ar";
-    document.documentElement.lang = isArabic ? "ar" : "en";
-    document.documentElement.dir = isArabic ? "rtl" : "ltr";
-  }
   if (settings.theme) {
     document.documentElement.classList.toggle(
       "dark",
@@ -67,94 +65,95 @@ function applyDocumentPreferences(settings: Partial<StaffSettingsState>) {
   }
 }
 
-function SettingsCard({
+function SettingsSection({
   title,
   children,
-  delay,
+  delay = 0,
 }: {
   title: string;
   children: React.ReactNode;
-  delay: number;
+  delay?: number;
 }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay, ease: "easeOut" }}
-      className="rounded-[28px] bg-white p-[12px] shadow-[0_8px_20px_rgba(8,26,48,0.2)] md:p-[18px]"
+      className="w-full rounded-[25px] bg-white p-4 shadow-[0_4px_4px_rgba(0,0,0,0.25)] md:p-6"
     >
-      <h2 className="mb-2 px-2 text-right font-['Tajawal',sans-serif] text-[28px] leading-none text-[#1a3b5c] md:mb-3 md:text-[32px]">
-        {title}
-      </h2>
-      <div className="rounded-[24px] bg-[#f7b34d] p-3 shadow-[inset_0_4px_6px_rgba(0,0,0,0.12)] md:p-4">
-        {children}
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-[20px] font-bold text-[#1a3b5c] md:text-[24px]">
+          {title}:
+        </h2>
+      </div>
+      <div className="overflow-hidden rounded-[28px] bg-[#ffb755] p-1 shadow-[inset_0_4px_4px_rgba(0,0,0,0.25)]">
+        <div className="flex flex-col">{children}</div>
       </div>
     </motion.section>
   );
 }
 
 function SettingsRow({
-  icon,
+  icon: Icon,
   label,
-  description,
+  value,
   action,
-  danger = false,
-  noBorder = false,
+  isLast = false,
 }: {
-  icon: React.ReactNode;
+  icon: any;
   label: string;
-  description?: string;
+  value?: string;
   action: React.ReactNode;
-  danger?: boolean;
-  noBorder?: boolean;
+  isLast?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 py-2 md:flex-row md:items-center md:justify-between",
-        !noBorder && "border-b border-[#1a3b5c]/12",
+        "flex items-center justify-between px-4 py-4 md:px-6",
+        !isLast && "border-b border-[#1a3b5c]/10",
       )}
     >
-      <div className="flex items-start justify-end gap-3 text-right">
-        <div className="pt-1 text-[#ffffff]">{icon}</div>
-        <div>
-          <p
-            className={cn(
-              "font-['Tajawal',sans-serif] text-[24px] leading-tight text-[#1a3b5c] md:text-[28px]",
-              danger && "text-[#8c4f00]",
-            )}
-          >
+      <div className="flex items-center gap-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-[#1a3b5c]">
+          <Icon size={24} />
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[18px] font-bold text-[#1a3b5c] md:text-[20px]">
             {label}
-          </p>
-          {description && (
-            <p className="mt-1 max-w-[540px] font-['Tajawal',sans-serif] text-[15px] text-[#26496e]/85 md:text-[16px]">
-              {description}
-            </p>
+          </span>
+          {value && (
+            <span className="text-[14px] text-[#1a3b5c]/70 md:text-[16px]">
+              {value}
+            </span>
           )}
         </div>
       </div>
-      <div className="flex justify-start md:justify-end">{action}</div>
+      <div className="flex items-center gap-2">{action}</div>
     </div>
   );
 }
 
-function ActionIconButton({
-  label,
+function ActionButton({
   onClick,
-  children,
+  icon: Icon,
+  variant = "primary",
 }: {
-  label: string;
   onClick: () => void;
-  children: React.ReactNode;
+  icon: any;
+  variant?: "primary" | "secondary";
 }) {
   return (
     <button
       type="button"
-      aria-label={label}
       onClick={onClick}
-      className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/35 bg-[#1a3b5c]/8 text-white transition duration-200 hover:-translate-y-0.5 hover:bg-[#1a3b5c]/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a3b5c] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7b34d]"
+      className={cn(
+        "flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95",
+        variant === "primary"
+          ? "bg-[#1a3b5c] text-white"
+          : "bg-white/30 text-[#1a3b5c]",
+      )}
     >
-      {children}
+      <Icon size={20} />
     </button>
   );
 }
@@ -166,7 +165,7 @@ interface SettingsFormProps {
 export default function SettingsForm({ initialSettings }: SettingsFormProps) {
   const { data: session, update } = useSession();
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
   const [isNameModalOpen, setNameModalOpen] = useState(false);
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
 
@@ -177,7 +176,7 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
     (state, update: Partial<StaffSettingsState>) => ({
       ...state,
       ...update,
-    })
+    }),
   );
 
   useEffect(() => {
@@ -193,140 +192,169 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
       setOptimisticSettings({ [key]: value });
       applyDocumentPreferences({ [key]: value });
 
-      if (key === "emailNotifications" || key === "siteNotifications") {
-        const result = await updateStaffPreferences({
-          emailNotifications: key === "emailNotifications" ? (value as NotificationPreference) : optimisticSettings.emailNotifications,
-          siteNotifications: key === "siteNotifications" ? (value as NotificationPreference) : optimisticSettings.siteNotifications,
-        });
+      const result = await updateStaffPreferences({ [key]: value });
 
-        if (result.error) {
-          toast.error(result.error);
-        } else {
-          toast.success("Preferences updated successfully.");
-        }
+      if (result.error) {
+        toast.error(result.error);
       } else {
         toast.success(`${key.replace(/([A-Z])/g, " $1").trim()} updated.`);
         if (key === "language") {
-          document.location.reload();
+          // Temporarily reload to apply language if it was implemented,
+          // but we are keeping it in English for now.
+          // window.location.reload();
         }
       }
     });
   };
 
+  const handleExportData = async () => {
+    toast.loading("Preparing your data for export...", { id: "export" });
+    try {
+      const response = await fetch("/api/staff/export");
+      if (!response.ok) throw new Error("Export failed");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `staff-export-${session?.user?.id}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("Your data has been exported successfully.", {
+        id: "export",
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export data. Please try again later.", {
+        id: "export",
+      });
+    }
+  };
+
   if (!hasLoaded) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <p>Loading settings...</p>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1a3b5c] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <>
-      <div className="flex flex-col gap-6 pb-24">
-        <SettingsCard title="الحساب" delay={0.1}>
-          <SettingsRow
-            icon={<PenLine size={28} />}
-            label="تعديل الاسم"
-            description={`الاسم الحالي: ${session?.user?.name ?? "..."}`}
-            action={
-              <ActionIconButton
-                label="تعديل الاسم"
-                onClick={() => setNameModalOpen(true)}
-              >
-                <PenLine size={24} />
-              </ActionIconButton>
-            }
-          />
-          <SettingsRow
-            icon={<LockKeyhole size={28} />}
-            label="تغيير كلمة المرور"
-            description="ننصح باستخدام كلمة مرور قوية وتغييرها بشكل دوري"
-            action={
-              <ActionIconButton
-                label="تغيير كلمة المرور"
-                onClick={() => setPasswordModalOpen(true)}
-              >
-                <LockKeyhole size={24} />
-              </ActionIconButton>
-            }
-            noBorder
-            danger
-          />
-        </SettingsCard>
+    <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-6 pb-12">
+      {/* Account Settings */}
+      <SettingsSection title="Account Settings" delay={0.1}>
+        <SettingsRow
+          icon={User}
+          label="Update Name"
+          value={session?.user?.name ?? "..."}
+          action={
+            <ActionButton
+              onClick={() => setNameModalOpen(true)}
+              icon={PenLine}
+            />
+          }
+        />
+        <SettingsRow
+          icon={LockKeyhole}
+          label="Password"
+          value="Change or reset your password"
+          isLast
+          action={
+            <ActionButton
+              onClick={() => setPasswordModalOpen(true)}
+              icon={PenLine}
+            />
+          }
+        />
+      </SettingsSection>
 
-        <SettingsCard title="الإشعارات" delay={0.2}>
-          <SettingsRow
-            icon={<Mail size={28} />}
-            label="إشعارات البريد الإلكتروني"
-            description="تلقي التحديثات الهامة والأخبار عبر البريد الإلكتروني"
-            action={
-              <AnimatedSwitch
-                ariaLabel="إشعارات البريد الإلكتروني"
-                options={[...SWITCH_OPTIONS.notification]}
-                value={optimisticSettings.emailNotifications}
-                onChange={(value) =>
-                  handleSettingChange(
-                    "emailNotifications",
-                    value as NotificationPreference,
-                  )
-                }
-              />
-            }
-          />
-          <SettingsRow
-            icon={<Bell size={28} />}
-            label="الإشعارات داخل الموقع"
-            description="إظهار الإشعارات والتنبيهات أثناء تصفحك للموقع"
-            action={
-              <AnimatedSwitch
-                ariaLabel="الإشعارات داخل الموقع"
-                options={[...SWITCH_OPTIONS.notification]}
-                value={optimisticSettings.siteNotifications}
-                onChange={(value) =>
-                  handleSettingChange(
-                    "siteNotifications",
-                    value as NotificationPreference,
-                  )
-                }
-              />
-            }
-            noBorder
-          />
-        </SettingsCard>
+      {/* Notifications Settings */}
+      <SettingsSection title="Notification Settings" delay={0.2}>
+        <SettingsRow
+          icon={Mail}
+          label="Email Notifications"
+          action={
+            <AnimatedSwitch
+              ariaLabel="Email Notifications"
+              options={[...SWITCH_OPTIONS.notification]}
+              value={optimisticSettings.emailNotifications}
+              onChange={(v) =>
+                handleSettingChange("emailNotifications", v as any)
+              }
+            />
+          }
+        />
+        <SettingsRow
+          icon={Bell}
+          label="Site Notifications"
+          isLast
+          action={
+            <AnimatedSwitch
+              ariaLabel="Site Notifications"
+              options={[...SWITCH_OPTIONS.notification]}
+              value={optimisticSettings.siteNotifications}
+              onChange={(v) =>
+                handleSettingChange("siteNotifications", v as any)
+              }
+            />
+          }
+        />
+      </SettingsSection>
 
-        <SettingsCard title="التخصيص" delay={0.3}>
-          <SettingsRow
-            icon={<Languages size={28} />}
-            label="لغة الواجهة"
-            action={
+      {/* Interface Settings */}
+      <SettingsSection title="Interface Settings" delay={0.3}>
+        <SettingsRow
+          icon={Globe}
+          label="Choose Language"
+          action={
+            <div className="relative">
               <AnimatedSwitch
-                ariaLabel="لغة الواجهة"
+                ariaLabel="Choose Language"
                 options={[...SWITCH_OPTIONS.language]}
-                value={optimisticSettings.language}
-                onChange={(value) =>
-                  handleSettingChange("language", value as LanguagePreference)
+                value="en" // Hardcoded to English
+                onChange={() =>
+                  toast.error("Language selection is temporarily disabled.")
                 }
+                className="opacity-50 grayscale cursor-not-allowed"
               />
-            }
-          />
-          <SettingsRow
-            icon={<SunMedium size={28} />}
-            label="السمة"
-            action={
-              <AnimatedSwitch
-                ariaLabel="السمة"
-                options={[...SWITCH_OPTIONS.theme]}
-                value={optimisticSettings.theme}
-                onChange={(value) =>
-                  handleSettingChange("theme", value as ThemePreference)
-                }
-              />
-            }
-            noBorder
-          />
-        </SettingsCard>
-      </div>
+            </div>
+          }
+        />
+        <SettingsRow
+          icon={optimisticSettings.theme === "light" ? Sun : Moon}
+          label="Theme"
+          isLast
+          action={
+            <AnimatedSwitch
+              ariaLabel="Theme"
+              options={[...SWITCH_OPTIONS.theme]}
+              value={optimisticSettings.theme}
+              onChange={(v) => handleSettingChange("theme", v as any)}
+            />
+          }
+        />
+      </SettingsSection>
+
+      {/* Advanced Settings */}
+      <SettingsSection title="Advanced Settings" delay={0.4}>
+        <SettingsRow
+          icon={Download}
+          label="Export Data"
+          value="Download your account data"
+          isLast
+          action={
+            <ActionButton
+              onClick={handleExportData}
+              icon={Download}
+              variant="secondary"
+            />
+          }
+        />
+      </SettingsSection>
+
       <UpdateNameModal
         isOpen={isNameModalOpen}
         onClose={() => {
@@ -339,6 +367,6 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
         isOpen={isPasswordModalOpen}
         onClose={() => setPasswordModalOpen(false)}
       />
-    </>
+    </div>
   );
 }

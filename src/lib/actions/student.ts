@@ -1,6 +1,6 @@
 "use server";
 
-import { mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -176,15 +176,39 @@ export async function confirmStepAction(stepOrder: number) {
   if (!session?.user?.id) return { error: "غير مصرح" };
 
   try {
-    await prisma.certificateStep.updateMany({
+    // Find the step
+    const step = await prisma.certificateStep.findFirst({
       where: {
         userId: session.user.id,
         order: stepOrder,
       },
+      select: { id: true, label: true, updatedById: true },
+    });
+
+    if (!step) return { error: "الخطوة غير موجودة" };
+
+    // Update status to MODIFIED to indicate student has interacted/confirmed
+    // The requirement says "The certificate status must not update until staff reviews"
+    // So we don't set to COMPLETED.
+    await prisma.certificateStep.update({
+      where: { id: step.id },
       data: {
-        status: "COMPLETED",
+        status: "MODIFIED", // Indicates student has confirmed/modified data
+        isModifiedByStudent: true,
       },
     });
+
+    // Notify the staff member who last updated this step (if any) or all staff
+    if (step.updatedById) {
+      await prisma.notification.create({
+        data: {
+          userId: step.updatedById,
+          title: "تأكيد بيانات الطالب",
+          message: `قام الطالب بتأكيد/تعديل بياناته للخطوة: ${step.label}. يرجى المراجعة والاعتماد يدوياً.`,
+          sentById: session.user.id,
+        },
+      });
+    }
 
     revalidatePath("/student/notifications");
     revalidatePath("/student");

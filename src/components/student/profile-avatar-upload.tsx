@@ -44,7 +44,6 @@ function CameraIcon() {
         fill="#1A3B5C"
       />
       <circle cx="41" cy="40" r="5" fill="#E9EEF3" />
-      
     </svg>
   );
 }
@@ -58,7 +57,7 @@ function TrashIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-className="h-1 w-1 sm:h-3 sm:w-3"
+      className="h-1 w-1 sm:h-3 sm:w-3"
     >
       <path d="M3 6h18" />
       <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
@@ -79,7 +78,7 @@ export default function ProfileAvatarUpload({
 
   useEffect(() => {
     setIsDeleted(false);
-  }, [initialImageUrl]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -89,7 +88,7 @@ export default function ProfileAvatarUpload({
     };
   }, [previewUrl]);
 
-  const displayedSrc = isDeleted ? null : (previewUrl || initialImageUrl || null);
+  const displayedSrc = isDeleted ? null : previewUrl || initialImageUrl || null;
 
   function handleFilePick(file: File | null) {
     if (!file || !file.type.startsWith("image/")) return;

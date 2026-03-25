@@ -1,37 +1,36 @@
 "use client";
 
-import { useState, useTransition, useOptimistic } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  Lock, 
-  Mail, 
-  Pencil, 
-  Bell, 
-  Globe, 
-  Moon, 
-  Sun, 
-  LogOut, 
-  ChevronLeft,
-  Loader2,
-  X
-} from "lucide-react";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-import { 
-  updateUserSettingsAction, 
-  changePasswordAction, 
-  changeEmailAction 
-} from "@/lib/actions/student-settings";
-import { logoutAction } from "@/lib/actions/logout";
-import { 
-  changeEmailSchema, 
-  changePasswordSchema,
-  type ChangeEmailInput,
-  type ChangePasswordInput
-} from "@/lib/validations/student-settings";
+import {
+  Bell,
+  ChevronLeft,
+  Globe,
+  Loader2,
+  Lock,
+  LogOut,
+  Mail,
+  Moon,
+  Pencil,
+  Sun,
+  X,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useOptimistic, useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { logoutAction } from "@/lib/actions/logout";
+import {
+  changeEmailAction,
+  changePasswordAction,
+  updateUserSettingsAction,
+} from "@/lib/actions/student-settings";
+import {
+  type ChangeEmailInput,
+  type ChangePasswordInput,
+  changeEmailSchema,
+  changePasswordSchema,
+} from "@/lib/validations/student-settings";
 
 interface SettingsClientProps {
   initialSettings: {
@@ -43,7 +42,13 @@ interface SettingsClientProps {
   };
 }
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="bg-white rounded-[35px] p-5 shadow-lg flex flex-col gap-4 w-full">
       <h2 className="text-[#1a3b5c] text-xl font-bold font-arabic text-right px-2">
@@ -86,20 +91,24 @@ function Toggle({
         dir="ltr"
       >
         <span className="sr-only">{label}</span>
-        
+
         {/* On Label */}
         <span
           className={`absolute left-[7px] text-[9px] font-black uppercase tracking-tighter transition-all duration-300 pointer-events-none ${
-            isOn ? "opacity-100 translate-x-0 text-white" : "opacity-0 -translate-x-2"
+            isOn
+              ? "opacity-100 translate-x-0 text-white"
+              : "opacity-0 -translate-x-2"
           }`}
         >
           on
         </span>
-        
+
         {/* Off Label */}
         <span
           className={`absolute right-[7px] text-[9px] font-black uppercase tracking-tighter transition-all duration-300 pointer-events-none ${
-            !isOn ? "opacity-100 translate-x-0 text-gray-500" : "opacity-0 translate-x-2"
+            !isOn
+              ? "opacity-100 translate-x-0 text-gray-500"
+              : "opacity-0 translate-x-2"
           }`}
         >
           off
@@ -136,12 +145,16 @@ function RadioOption({
       >
         {selected && <div className="w-2.5 h-2.5 rounded-full bg-[#1a3b5c]" />}
       </div>
-      <span className="text-[#1a3b5c] text-lg font-bold font-arabic">{label}</span>
+      <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
+        {label}
+      </span>
     </button>
   );
 }
 
-export default function SettingsClient({ initialSettings }: SettingsClientProps) {
+export default function SettingsClient({
+  initialSettings,
+}: SettingsClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -151,8 +164,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
     initialSettings,
     (state, update: Partial<typeof initialSettings>) => ({
       ...state,
-      ...update
-    })
+      ...update,
+    }),
   );
 
   const handleUpdateSetting = (update: Partial<typeof initialSettings>) => {
@@ -174,7 +187,10 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   };
 
   return (
-    <div className="flex flex-col px-5 pt-8 pb-10 gap-6 w-full max-w-[430px] mx-auto min-h-screen bg-[#1a3b5c]" dir="rtl">
+    <div
+      className="flex flex-col px-5 pt-8 pb-10 gap-6 w-full max-w-[430px] mx-auto min-h-screen bg-[#1a3b5c]"
+      dir="rtl"
+    >
       <h1 className="text-white text-3xl font-bold font-arabic text-center mb-4">
         الاعدادات
       </h1>
@@ -196,9 +212,9 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
             <Pencil size={20} className="text-[#1a3b5c]" />
           </button>
         </div>
-        
+
         <div className="h-px w-full bg-[#1a3b5c]/10"></div>
-        
+
         <div className="flex items-center justify-between py-1">
           <div className="flex items-center gap-3">
             <span className="text-[#1a3b5c] text-lg font-bold font-arabic">
@@ -222,14 +238,22 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           label="إشعارات البريد"
           icon={Mail}
           isOn={optimisticSettings.emailNotifications}
-          onToggle={() => handleUpdateSetting({ emailNotifications: !optimisticSettings.emailNotifications })}
+          onToggle={() =>
+            handleUpdateSetting({
+              emailNotifications: !optimisticSettings.emailNotifications,
+            })
+          }
         />
         <div className="h-px w-full bg-[#1a3b5c]/10"></div>
         <Toggle
           label="التنبيهات داخل الموقع"
           icon={Bell}
           isOn={optimisticSettings.siteNotifications}
-          onToggle={() => handleUpdateSetting({ siteNotifications: !optimisticSettings.siteNotifications })}
+          onToggle={() =>
+            handleUpdateSetting({
+              siteNotifications: !optimisticSettings.siteNotifications,
+            })
+          }
         />
       </SectionCard>
 
@@ -255,7 +279,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
             />
           </div>
         </div>
-        
+
         <div className="h-px w-full bg-[#1a3b5c]/10"></div>
 
         <div className="flex items-center justify-between w-full py-1">
@@ -264,11 +288,15 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
               ثيم الموقع
             </span>
             <div className="text-[#1a3b5c]">
-              {optimisticSettings.theme === "light" ? <Sun size={20} /> : <Moon size={20} />}
+              {optimisticSettings.theme === "light" ? (
+                <Sun size={20} />
+              ) : (
+                <Moon size={20} />
+              )}
             </div>
           </div>
           <div className="flex gap-4">
-             <RadioOption
+            <RadioOption
               label="ليلي"
               selected={optimisticSettings.theme === "dark"}
               onSelect={() => handleUpdateSetting({ theme: "dark" })}
@@ -306,16 +334,14 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
       {/* Modals */}
       {isPasswordModalOpen && (
-        <ChangePasswordModal 
-          onClose={() => setIsPasswordModalOpen(false)} 
-        />
+        <ChangePasswordModal onClose={() => setIsPasswordModalOpen(false)} />
       )}
       {isEmailModalOpen && (
-        <ChangeEmailModal 
+        <ChangeEmailModal
           currentEmail={optimisticSettings.email}
-          onClose={() => setIsEmailModalOpen(false)} 
-          onSuccess={(newEmail) => {
-            // Since email change is a formal update that might trigger logout or re-auth, 
+          onClose={() => setIsEmailModalOpen(false)}
+          onSuccess={(_newEmail) => {
+            // Since email change is a formal update that might trigger logout or re-auth,
             // we should probably let the modal handle its own state or refresh.
             // But for the sake of the UI update:
             router.refresh();
@@ -328,8 +354,12 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
 function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   const [isPending, startTransition] = useTransition();
-  const { register, handleSubmit, formState: { errors } } = useForm<ChangePasswordInput>({
-    resolver: zodResolver(changePasswordSchema)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ChangePasswordInput>({
+    resolver: zodResolver(changePasswordSchema),
   });
 
   const onSubmit = (data: ChangePasswordInput) => {
@@ -350,62 +380,81 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" dir="rtl">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+      dir="rtl"
+    >
       <div className="w-full max-w-md rounded-[30px] bg-white p-8 shadow-2xl relative">
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-6 left-6 text-[#1a3b5c] hover:opacity-70"
         >
           <X size={24} />
         </button>
-        
+
         <h3 className="mb-6 text-2xl font-bold text-[#1a3b5c] font-arabic">
           تغيير كلمة المرور
         </h3>
-        
+
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <label className="text-[#1a3b5c] font-bold font-arabic">كلمة المرور الحالية</label>
+            <label className="text-[#1a3b5c] font-bold font-arabic">
+              كلمة المرور الحالية
+            </label>
             <input
               type="password"
               {...register("currentPassword")}
               className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ffb755]"
             />
             {errors.currentPassword && (
-              <p className="text-sm text-red-500 font-arabic">{errors.currentPassword.message}</p>
+              <p className="text-sm text-red-500 font-arabic">
+                {errors.currentPassword.message}
+              </p>
             )}
           </div>
-          
+
           <div className="flex flex-col gap-2">
-            <label className="text-[#1a3b5c] font-bold font-arabic">كلمة المرور الجديدة</label>
+            <label className="text-[#1a3b5c] font-bold font-arabic">
+              كلمة المرور الجديدة
+            </label>
             <input
               type="password"
               {...register("newPassword")}
               className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ffb755]"
             />
             {errors.newPassword && (
-              <p className="text-sm text-red-500 font-arabic">{errors.newPassword.message}</p>
+              <p className="text-sm text-red-500 font-arabic">
+                {errors.newPassword.message}
+              </p>
             )}
           </div>
-          
+
           <div className="flex flex-col gap-2">
-            <label className="text-[#1a3b5c] font-bold font-arabic">تأكيد كلمة المرور الجديدة</label>
+            <label className="text-[#1a3b5c] font-bold font-arabic">
+              تأكيد كلمة المرور الجديدة
+            </label>
             <input
               type="password"
               {...register("confirmPassword")}
               className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ffb755]"
             />
             {errors.confirmPassword && (
-              <p className="text-sm text-red-500 font-arabic">{errors.confirmPassword.message}</p>
+              <p className="text-sm text-red-500 font-arabic">
+                {errors.confirmPassword.message}
+              </p>
             )}
           </div>
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             disabled={isPending}
             className="mt-4 bg-[#1a3b5c] hover:bg-[#1a3b5c]/90 text-white rounded-xl py-6 text-lg font-bold font-arabic"
           >
-            {isPending ? <Loader2 className="animate-spin" /> : "تحديث كلمة المرور"}
+            {isPending ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              "تحديث كلمة المرور"
+            )}
           </Button>
         </form>
       </div>
@@ -413,19 +462,23 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ChangeEmailModal({ 
-  currentEmail, 
-  onClose, 
-  onSuccess 
-}: { 
-  currentEmail: string; 
+function ChangeEmailModal({
+  currentEmail,
+  onClose,
+  onSuccess,
+}: {
+  currentEmail: string;
   onClose: () => void;
   onSuccess: (email: string) => void;
 }) {
   const [isPending, startTransition] = useTransition();
-  const { register, handleSubmit, formState: { errors } } = useForm<ChangeEmailInput>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ChangeEmailInput>({
     resolver: zodResolver(changeEmailSchema),
-    defaultValues: { newEmail: currentEmail }
+    defaultValues: { newEmail: currentEmail },
   });
 
   const onSubmit = (data: ChangeEmailInput) => {
@@ -445,38 +498,49 @@ function ChangeEmailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" dir="rtl">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+      dir="rtl"
+    >
       <div className="w-full max-w-md rounded-[30px] bg-white p-8 shadow-2xl relative">
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-6 left-6 text-[#1a3b5c] hover:opacity-70"
         >
           <X size={24} />
         </button>
-        
+
         <h3 className="mb-6 text-2xl font-bold text-[#1a3b5c] font-arabic">
           تغيير البريد الإلكتروني
         </h3>
-        
+
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <label className="text-[#1a3b5c] font-bold font-arabic">البريد الإلكتروني الجديد</label>
+            <label className="text-[#1a3b5c] font-bold font-arabic">
+              البريد الإلكتروني الجديد
+            </label>
             <input
               type="email"
               {...register("newEmail")}
               className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ffb755]"
             />
             {errors.newEmail && (
-              <p className="text-sm text-red-500 font-arabic">{errors.newEmail.message}</p>
+              <p className="text-sm text-red-500 font-arabic">
+                {errors.newEmail.message}
+              </p>
             )}
           </div>
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             disabled={isPending}
             className="mt-4 bg-[#1a3b5c] hover:bg-[#1a3b5c]/90 text-white rounded-xl py-6 text-lg font-bold font-arabic"
           >
-            {isPending ? <Loader2 className="animate-spin" /> : "تحديث البريد الإلكتروني"}
+            {isPending ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              "تحديث البريد الإلكتروني"
+            )}
           </Button>
         </form>
       </div>

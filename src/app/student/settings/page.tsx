@@ -1,7 +1,7 @@
+import { redirect } from "next/navigation";
 import SettingsClient from "@/components/student/settings-client";
 import { getStudentSettings } from "@/lib/actions/student-settings";
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 export default async function StudentSettingsPage() {
   const session = await auth();

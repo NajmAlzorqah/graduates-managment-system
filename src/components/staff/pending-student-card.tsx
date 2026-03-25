@@ -13,14 +13,20 @@ interface PendingStudentCardProps {
   student: Student;
 }
 
-function StudentAvatar({ avatarUrl, name }: { avatarUrl?: string | null; name: string }) {
+function StudentAvatar({
+  avatarUrl,
+  name,
+}: {
+  avatarUrl?: string | null;
+  name: string;
+}) {
   return (
     <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-[#1a3b5c] md:h-[100px] md:w-[100px] xl:h-[131px] xl:w-[131px] relative overflow-hidden">
       {avatarUrl ? (
-        <Image 
-          src={avatarUrl} 
-          alt={name} 
-          fill 
+        <Image
+          src={avatarUrl}
+          alt={name}
+          fill
           className="object-cover"
           unoptimized
         />

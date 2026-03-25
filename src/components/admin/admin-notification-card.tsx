@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { MoreHorizontal, Trash2, UserX, XCircle } from "lucide-react";
+import { Trash2, XCircle } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import {
@@ -84,7 +84,10 @@ export default function AdminNotificationCard({
       className={`relative flex w-full flex-col overflow-hidden rounded-[24px] bg-[#ffb755] shadow-lg md:rounded-[30px] ${isDeleting ? "opacity-50 grayscale" : ""}`}
     >
       {/* Title Header - White font on slightly darker orange */}
-      <div className="flex items-center justify-between bg-[#f39c12] px-6 py-4 md:px-8" dir="rtl">
+      <div
+        className="flex items-center justify-between bg-[#f39c12] px-6 py-4 md:px-8"
+        dir="rtl"
+      >
         <h3 className="text-right text-[22px] font-bold text-white md:text-[26px]">
           {notification.title}
         </h3>

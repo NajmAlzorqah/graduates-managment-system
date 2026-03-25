@@ -11,7 +11,7 @@ import {
   SunMedium,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useEffect, useState, useTransition, useOptimistic } from "react";
+import { useEffect, useOptimistic, useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
 import AnimatedSwitch from "@/components/ui/animated-switch";
@@ -164,10 +164,12 @@ interface AdminSettingsFormProps {
   initialSettings: AdminSettingsState | null;
 }
 
-export default function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
+export default function AdminSettingsForm({
+  initialSettings,
+}: AdminSettingsFormProps) {
   const { data: session, update } = useSession();
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
   const [isNameModalOpen, setNameModalOpen] = useState(false);
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
 
@@ -178,7 +180,7 @@ export default function AdminSettingsForm({ initialSettings }: AdminSettingsForm
     (state, update: Partial<AdminSettingsState>) => ({
       ...state,
       ...update,
-    })
+    }),
   );
 
   useEffect(() => {
@@ -196,8 +198,14 @@ export default function AdminSettingsForm({ initialSettings }: AdminSettingsForm
 
       if (key === "emailNotifications" || key === "siteNotifications") {
         const result = await updateAdminPreferences({
-          emailNotifications: key === "emailNotifications" ? (value as NotificationPreference) : optimisticSettings.emailNotifications,
-          siteNotifications: key === "siteNotifications" ? (value as NotificationPreference) : optimisticSettings.siteNotifications,
+          emailNotifications:
+            key === "emailNotifications"
+              ? (value as NotificationPreference)
+              : optimisticSettings.emailNotifications,
+          siteNotifications:
+            key === "siteNotifications"
+              ? (value as NotificationPreference)
+              : optimisticSettings.siteNotifications,
         });
 
         if (result.error) {

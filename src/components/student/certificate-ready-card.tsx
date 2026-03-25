@@ -1,7 +1,5 @@
 "use client";
 
-import { useTransition } from "react";
-
 export default function CertificateReadyCard() {
   return (
     <div className="bg-white rounded-[35px] px-8 py-10 shadow-lg border-2 border-[#ffb755] flex flex-col items-center text-center gap-6">
@@ -28,7 +26,8 @@ export default function CertificateReadyCard() {
           شهادتك جاهزة. يرجى مراجعة الجامعة والتواصل مع مكتب الخريجين.
         </p>
         <p className="text-[#1a3b5c] font-semibold text-lg leading-snug">
-          Your certificate is ready. Please visit the university and contact the graduation office.
+          Your certificate is ready. Please visit the university and contact the
+          graduation office.
         </p>
       </div>
 

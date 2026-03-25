@@ -1,9 +1,9 @@
-import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import {
   getIncomingNotifications,
   getOutgoingNotifications,
 } from "@/lib/api/notifications";
-import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import NotificationsPageClient from "./client-page";
 
 export default async function StaffNotificationsPage() {

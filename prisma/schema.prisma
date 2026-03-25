@@ -21,6 +21,7 @@ model User {
   siteNotifications    Boolean           @default(true)
   language             String            @default("ar")
   theme                String            @default("light")
+  lastCheckedNewStudentsAt DateTime       @default(now())
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
   accounts             Account[]
@@ -36,6 +37,17 @@ model User {
   notifications        Notification[]    @relation("UserNotifications")
   sessions             Session[]
   studentProfile       StudentProfile?
+  assignedTodos        Todo[]            @relation("StaffTodos")
+}
+
+model Todo {
+  id          String   @id @default(cuid())
+  title       String
+  completed   Boolean  @default(false)
+  staffId     String
+  staff       User     @relation("StaffTodos", fields: [staffId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Account {

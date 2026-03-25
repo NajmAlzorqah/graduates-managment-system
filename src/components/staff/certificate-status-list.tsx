@@ -1,7 +1,7 @@
 "use client";
 
 import type { NotificationTemplate } from "@prisma/client";
-import { Filter, Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { StudentWithSteps } from "@/types/student";
 import CertificateDetailsModal from "./certificate-details-modal";
@@ -20,7 +20,7 @@ export default function CertificateStatusList({ students, templates }: Props) {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [filterMajor, setFilterMajor] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterStatus, _setFilterStatus] = useState<string | null>(null);
 
   const majors = useMemo(() => {
     const allMajors = students.map((s) => s.major).filter(Boolean) as string[];

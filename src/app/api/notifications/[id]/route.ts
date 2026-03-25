@@ -26,7 +26,7 @@ export async function PUT(request: Request, { params }: Params) {
   return NextResponse.json({ success: true });
 }
 
-export async function DELETE(request: Request, { params }: Params) {
+export async function DELETE(_request: Request, { params }: Params) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,7 +40,7 @@ export async function DELETE(request: Request, { params }: Params) {
     console.error("Failed to delete notification:", error);
     return NextResponse.json(
       { error: "Failed to delete notification" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

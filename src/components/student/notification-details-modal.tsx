@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import type { SerializedNotification } from "./notification-card";
-import { confirmStepAction, updateStudentDataAction } from "@/lib/actions/student";
+import {
+  confirmStepAction,
+  updateStudentDataAction,
+} from "@/lib/actions/student";
 import type { StudentWithProfile } from "@/types/student";
+import type { SerializedNotification } from "./notification-card";
 
 type NotificationDetailsModalProps = {
   notification: SerializedNotification;
@@ -29,7 +32,8 @@ export default function NotificationDetailsModal({
     name: student?.name || "",
     major: student?.profile?.major || "IT",
     studentCardNumber: student?.profile?.studentCardNumber || "",
-    graduationYear: student?.profile?.graduationYear || new Date().getFullYear(),
+    graduationYear:
+      student?.profile?.graduationYear || new Date().getFullYear(),
   });
 
   useEffect(() => {
@@ -52,9 +56,9 @@ export default function NotificationDetailsModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ 
-      ...prev, 
-      [name]: name === "graduationYear" ? parseInt(value) || 0 : value 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "graduationYear" ? parseInt(value, 10) || 0 : value,
     }));
   };
 
@@ -62,7 +66,7 @@ export default function NotificationDetailsModal({
     try {
       setIsSaving(true);
       const res = await updateStudentDataAction(formData);
-      
+
       if (res.error) {
         throw new Error(res.error);
       }
@@ -71,7 +75,7 @@ export default function NotificationDetailsModal({
         style: { fontFamily: "Tajawal, sans-serif" },
       });
       setIsEditing(false);
-    } catch (err) {
+    } catch (_err) {
       toast.error("حدث خطأ أثناء حفظ التعديلات", {
         style: { fontFamily: "Tajawal, sans-serif" },
       });
@@ -100,7 +104,7 @@ export default function NotificationDetailsModal({
       });
       setIsConfirming(false);
       handleClose();
-    } catch (err) {
+    } catch (_err) {
       toast.error("حدث خطأ أثناء التأكيد. يرجى المحاولة لاحقاً.", {
         style: { fontFamily: "Tajawal, sans-serif" },
       });

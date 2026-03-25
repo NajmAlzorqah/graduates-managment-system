@@ -1,7 +1,7 @@
 "use client";
 
-import { User } from "lucide-react";
 import { motion } from "framer-motion";
+import { User } from "lucide-react";
 import type { StudentWithSteps } from "@/types/student";
 
 type Props = {

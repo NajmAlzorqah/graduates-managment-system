@@ -29,7 +29,13 @@ export type StudentWithProfile = {
 export type CertificateStep = {
   id: string;
   label: string;
-  status: "completed" | "in-progress" | "pending" | "needs-verification" | "modified" | "rejected";
+  status:
+    | "completed"
+    | "in-progress"
+    | "pending"
+    | "needs-verification"
+    | "modified"
+    | "rejected";
 };
 
 export type DocumentItem = {

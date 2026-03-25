@@ -2,14 +2,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   CheckCircle2,
   Circle,
-  Clock,
+  ExternalLink,
+  FileText,
   User as UserIcon,
   X,
-  FileText,
-  ExternalLink,
 } from "lucide-react";
-import type { StudentWithSteps } from "@/types/student";
 import Image from "next/image";
+import type { StudentWithSteps } from "@/types/student";
 
 type Props = {
   isOpen: boolean;

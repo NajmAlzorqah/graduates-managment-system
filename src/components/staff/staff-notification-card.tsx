@@ -1,10 +1,13 @@
 "use client";
-import { deleteNotificationAction } from "@/lib/actions/staff-notifications";
-import { getNotificationRecipientName, getNotificationSenderName } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { deleteNotificationAction } from "@/lib/actions/staff-notifications";
+import {
+  getNotificationRecipientName,
+  getNotificationSenderName,
+} from "@/lib/utils";
 import type { NotificationWithUsers } from "@/types/notification";
 
 type NotificationCardProps = {
@@ -45,7 +48,7 @@ export default function StaffNotificationCard({
 
   const handleDelete = async () => {
     if (!confirm("هل أنت متأكد من حذف هذا الإشعار؟")) return;
-    
+
     setIsDeleting(true);
     try {
       const result = await deleteNotificationAction(notification.id);
@@ -54,7 +57,7 @@ export default function StaffNotificationCard({
       } else {
         toast.error("فشل حذف الإشعار");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("حدث خطأ أثناء الحذف");
     } finally {
       setIsDeleting(false);
@@ -74,7 +77,7 @@ export default function StaffNotificationCard({
     >
       {/* Three dots icon - left side (visually) in RTL */}
       <div className="absolute top-8 left-8 md:left-10 z-10">
-        <button 
+        <button
           onClick={() => setShowMenu(!showMenu)}
           className="p-2 transition-all hover:bg-black/5 rounded-full active:scale-90"
         >
@@ -84,7 +87,7 @@ export default function StaffNotificationCard({
         <AnimatePresence>
           {showMenu && (
             <>
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

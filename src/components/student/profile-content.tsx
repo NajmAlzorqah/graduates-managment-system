@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { updateOwnProfileAction } from "@/lib/actions/student";
 import ProfileAvatarUpload from "@/components/student/profile-avatar-upload";
+import { updateOwnProfileAction } from "@/lib/actions/student";
 
 type ProfileContentProps = {
   nameAr: string;
@@ -91,7 +91,10 @@ function EditPencilIcon() {
   );
 }
 
-const initialState: { success?: boolean; error?: string } = { success: false, error: "" };
+const initialState: { success?: boolean; error?: string } = {
+  success: false,
+  error: "",
+};
 
 export default function ProfileContent({
   nameAr,
@@ -103,10 +106,7 @@ export default function ProfileContent({
   avatarUrl,
 }: ProfileContentProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [state, action] = useActionState(
-    updateOwnProfileAction,
-    initialState,
-  );
+  const [state, action] = useActionState(updateOwnProfileAction, initialState);
   const [isPending, startTransition] = useTransition();
 
   // Optimistic UI states
@@ -125,7 +125,7 @@ export default function ProfileContent({
     setOptimisticName(formData.get("nameAr") as string);
     setOptimisticPhone(formData.get("phone") as string);
     setOptimisticEmail(formData.get("email") as string);
-    
+
     startTransition(() => {
       action(formData);
     });
@@ -134,7 +134,7 @@ export default function ProfileContent({
   const handleAvatarSelect = (file: File) => {
     const formData = new FormData();
     formData.append("image", file);
-    
+
     startTransition(() => {
       action(formData);
     });
@@ -143,7 +143,7 @@ export default function ProfileContent({
   const handleAvatarDelete = () => {
     const formData = new FormData();
     formData.append("deleteImage", "true");
-    
+
     startTransition(() => {
       action(formData);
     });
@@ -153,7 +153,7 @@ export default function ProfileContent({
     <div className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col overflow-hidden bg-[#1a3b5c] px-[25px] pb-[100px] pt-[60px] text-white">
       {/* Background Decorations */}
       <div className="absolute left-[-20%] top-[60%] h-[300px] w-[300px] rounded-full bg-white opacity-5 blur-[100px]" />
-      
+
       <header className="relative z-10 mb-[20px]" dir="rtl">
         <h1 className="text-center font-arabic text-[32px] font-bold leading-tight">
           الملف الشخصي
@@ -161,8 +161,12 @@ export default function ProfileContent({
       </header>
 
       <section className="relative z-10 flex flex-col items-center">
-        <ProfileAvatarUpload initialImageUrl={avatarUrl} onFileSelect={handleAvatarSelect} onDelete={handleAvatarDelete} />
-        
+        <ProfileAvatarUpload
+          initialImageUrl={avatarUrl}
+          onFileSelect={handleAvatarSelect}
+          onDelete={handleAvatarDelete}
+        />
+
         <div className="mt-[25px] text-center" dir="rtl">
           <h2 className="font-arabic text-[32px] font-bold leading-tight">
             {optimisticName || "-"}
@@ -217,10 +221,16 @@ export default function ProfileContent({
             <h3 className="mb-[20px] text-center font-arabic text-[24px] font-bold">
               تعديل البيانات
             </h3>
-            
-            <form action={handleSubmit} className="flex flex-col gap-[15px]" dir="rtl">
+
+            <form
+              action={handleSubmit}
+              className="flex flex-col gap-[15px]"
+              dir="rtl"
+            >
               <div className="flex flex-col gap-[5px]">
-                <label className="pr-[10px] font-arabic text-[14px] font-bold">الاسم بالعربية</label>
+                <label className="pr-[10px] font-arabic text-[14px] font-bold">
+                  الاسم بالعربية
+                </label>
                 <input
                   name="nameAr"
                   defaultValue={nameAr}
@@ -228,9 +238,11 @@ export default function ProfileContent({
                   placeholder="أدخل اسمك"
                 />
               </div>
-              
+
               <div className="flex flex-col gap-[5px]">
-                <label className="pr-[10px] font-arabic text-[14px] font-bold">البريد الإلكتروني</label>
+                <label className="pr-[10px] font-arabic text-[14px] font-bold">
+                  البريد الإلكتروني
+                </label>
                 <input
                   name="email"
                   defaultValue={email}
@@ -240,7 +252,9 @@ export default function ProfileContent({
               </div>
 
               <div className="flex flex-col gap-[5px]">
-                <label className="pr-[10px] font-arabic text-[14px] font-bold">رقم الهاتف</label>
+                <label className="pr-[10px] font-arabic text-[14px] font-bold">
+                  رقم الهاتف
+                </label>
                 <input
                   name="phone"
                   defaultValue={phone}

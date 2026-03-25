@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { NotificationWithUsers } from "@/types/notification";
-import { getNotificationSenderName } from "@/lib/utils";
 import { Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { getNotificationSenderName } from "@/lib/utils";
+import type { NotificationWithUsers } from "@/types/notification";
 
 /** Serialized version of Notification (Date → string across the server/client boundary) */
-export type SerializedNotification = Omit<NotificationWithUsers, "createdAt"> & {
+export type SerializedNotification = Omit<
+  NotificationWithUsers,
+  "createdAt"
+> & {
   createdAt: string;
 };
 

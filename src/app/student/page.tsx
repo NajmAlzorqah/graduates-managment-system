@@ -1,9 +1,9 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import CertificateReadyCard from "@/components/student/certificate-ready-card";
 import CertificateStatusCard from "@/components/student/certificate-status-card";
 import DocumentsStatusCard from "@/components/student/documents-status-card";
 import FirstLoginScreen from "@/components/student/first-login-screen";
-import CertificateReadyCard from "@/components/student/certificate-ready-card";
 import { getGraduationForm } from "@/lib/api/graduation-forms";
 import { getStudentHomeData } from "@/lib/api/student-home";
 import { auth } from "@/lib/auth";
@@ -42,8 +42,9 @@ export default async function StudentHomePage() {
     );
   }
 
-  const allStepsCompleted = certificateSteps.length > 0 && 
-    certificateSteps.every(step => step.status === "completed");
+  const allStepsCompleted =
+    certificateSteps.length > 0 &&
+    certificateSteps.every((step) => step.status === "completed");
 
   return (
     <div className="flex flex-col gap-5 pb-6">
@@ -52,10 +53,10 @@ export default async function StudentHomePage() {
         {/* Avatar — first child in RTL flex-row = right side */}
         <div className="w-20 h-20 rounded-full bg-[#ffb755] flex items-center justify-center shrink-0 shadow-md relative overflow-hidden">
           {profile.avatarUrl ? (
-            <Image 
-              src={profile.avatarUrl} 
-              alt={profile.nameAr} 
-              fill 
+            <Image
+              src={profile.avatarUrl}
+              alt={profile.nameAr}
+              fill
               className="object-cover"
               unoptimized
             />

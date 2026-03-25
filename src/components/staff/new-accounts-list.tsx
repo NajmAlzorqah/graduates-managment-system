@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Student } from "@/types/student";
 import PendingStudentCard from "./pending-student-card";
 
@@ -71,6 +71,13 @@ export default function NewAccountsList({
 }: NewAccountsListProps) {
   const [query, setQuery] = useState("");
   const [selectedMajor, setSelectedMajor] = useState("");
+
+  useEffect(() => {
+    // Clear the new students badge when this page is visited
+    fetch("/api/staff/clear-new-students-badge", { method: "POST" }).catch(
+      (err) => console.error("Failed to clear new students badge", err),
+    );
+  }, []);
 
   const filtered = useMemo(() => {
     let result = students;

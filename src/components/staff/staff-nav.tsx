@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type StaffNavProps = {
   staffName: string;
@@ -166,6 +167,39 @@ export default function StaffNav({
   staffDepartment,
 }: StaffNavProps) {
   const pathname = usePathname();
+  const [newStudentsCount, setNewStudentsCount] = useState(0);
+
+  useEffect(() => {
+    if (pathname === "/staff/students") {
+      setNewStudentsCount(0);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    async function fetchCount() {
+      // If we are on the page, don't fetch or just set to 0 if we want it to stay clear
+      // Actually, if we want new ones to appear even when on the page, we should fetch.
+      // But the prompt says "clear when opens".
+      try {
+        const res = await fetch("/api/staff/new-students-count");
+        if (res.ok) {
+          const data = await res.json();
+          // If we are currently on the students page, we assume the user is "seeing" them.
+          if (pathname === "/staff/students") {
+            setNewStudentsCount(0);
+          } else {
+            setNewStudentsCount(data.count || 0);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch new students count", error);
+      }
+    }
+
+    fetchCount();
+    const interval = setInterval(fetchCount, 5000); // Poll every 5 seconds for "real-time" feel
+    return () => clearInterval(interval);
+  }, [pathname]);
 
   return (
     <>
@@ -201,6 +235,7 @@ export default function StaffNav({
         >
           {STAFF_NAV_ITEMS.map((item, index) => {
             const active = isActivePath(pathname, item.href);
+            const isNewStudents = item.id === "new-students";
 
             return (
               <motion.div
@@ -234,8 +269,13 @@ export default function StaffNav({
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center xl:h-9 xl:w-9">
                     <StaffNavIcon icon={item.icon} active={active} />
                   </span>
-                  <span className="text-[22px] xl:text-[28px]">
+                  <span className="flex flex-1 items-center justify-between gap-2 pr-4 text-[22px] xl:text-[28px]">
                     {item.label}
+                    {isNewStudents && newStudentsCount > 0 && (
+                      <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-red-500 px-2 text-[16px] font-bold text-white shadow-sm xl:h-8 xl:min-w-8 xl:text-[20px]">
+                        {newStudentsCount}
+                      </span>
+                    )}
                   </span>
                 </Link>
               </motion.div>
@@ -251,6 +291,7 @@ export default function StaffNav({
       >
         {STAFF_NAV_ITEMS.map((item, index) => {
           const active = isActivePath(pathname, item.href);
+          const isNewStudents = item.id === "new-students";
 
           return (
             <motion.div
@@ -277,7 +318,14 @@ export default function StaffNav({
                 <span className="flex h-5 w-5 items-center justify-center">
                   <StaffNavIcon icon={item.icon} active={active} />
                 </span>
-                <span>{item.label}</span>
+                <span className="flex items-center gap-1.5">
+                  {item.label}
+                  {isNewStudents && newStudentsCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white">
+                      {newStudentsCount}
+                    </span>
+                  )}
+                </span>
               </Link>
             </motion.div>
           );

@@ -24,13 +24,7 @@ function SearchIcon() {
       aria-label="Search"
     >
       <title>Search</title>
-      <circle
-        cx="11"
-        cy="11"
-        r="7"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
       <path
         d="M20 20L17 17"
         stroke="currentColor"
@@ -64,7 +58,6 @@ function ChevronDownIcon() {
   );
 }
 
-
 export default function NotificationsPageClient({
   incomingNotifications,
   outgoingNotifications,
@@ -73,15 +66,18 @@ export default function NotificationsPageClient({
     "outgoing",
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "individual" | "group">("all");
+  const [filterType, setFilterType] = useState<"all" | "individual" | "group">(
+    "all",
+  );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Grouping logic for "Group" notifications in outgoing tab
   const getFilteredAndGrouped = () => {
-    const base = activeTab === "incoming" ? incomingNotifications : outgoingNotifications;
-    
+    const base =
+      activeTab === "incoming" ? incomingNotifications : outgoingNotifications;
+
     // Filter by search query first
-    let filtered = base.filter(
+    const filtered = base.filter(
       (n) =>
         n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         n.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,7 +88,7 @@ export default function NotificationsPageClient({
     if (activeTab === "outgoing") {
       // Group by (title, message, createdAt_rounded) to detect group notifications
       const groups: Record<string, NotificationWithUsers[]> = {};
-      filtered.forEach(n => {
+      filtered.forEach((n) => {
         const timeKey = new Date(n.createdAt).getTime();
         // Allow 2 second window for group creation
         const roundedTime = Math.floor(timeKey / 2000);
@@ -101,18 +97,21 @@ export default function NotificationsPageClient({
         groups[key].push(n);
       });
 
-      const groupedResult: (NotificationWithUsers & { isGroup?: boolean; count?: number })[] = [];
-      Object.values(groups).forEach(group => {
+      const groupedResult: (NotificationWithUsers & {
+        isGroup?: boolean;
+        count?: number;
+      })[] = [];
+      Object.values(groups).forEach((group) => {
         if (group.length > 1) {
           groupedResult.push({
             ...group[0],
             isGroup: true,
             count: group.length,
-            user: { 
-              ...group[0].user, 
+            user: {
+              ...group[0].user,
               nameAr: `مجموعة (${group.length} طلاب)`,
-              role: "GROUP"
-            }
+              role: "GROUP",
+            },
           });
         } else {
           groupedResult.push(group[0]);
@@ -121,9 +120,9 @@ export default function NotificationsPageClient({
 
       // Filter by type
       if (filterType === "individual") {
-        return groupedResult.filter(n => !n.isGroup);
+        return groupedResult.filter((n) => !n.isGroup);
       } else if (filterType === "group") {
-        return groupedResult.filter(n => n.isGroup);
+        return groupedResult.filter((n) => n.isGroup);
       }
       return groupedResult;
     }
@@ -136,7 +135,7 @@ export default function NotificationsPageClient({
   const filterLabels = {
     all: "All",
     individual: "Individual",
-    group: "Group"
+    group: "Group",
   };
 
   return (
@@ -168,7 +167,7 @@ export default function NotificationsPageClient({
                 send new
               </button>
             </Link>
-            
+
             {/* Dynamic Filter Dropdown */}
             <div className="relative">
               <button
@@ -177,7 +176,9 @@ export default function NotificationsPageClient({
                 className="h-12 px-6 rounded-full bg-[#ffb755] text-white text-lg font-bold flex items-center gap-2 shadow-md hover:bg-[#ffa030] transition-colors min-w-[140px] justify-between"
               >
                 <span>{filterLabels[filterType]}</span>
-                <div className={`transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`}>
+                <div
+                  className={`transition-transform duration-200 ${isFilterOpen ? "rotate-180" : ""}`}
+                >
                   <ChevronDownIcon />
                 </div>
               </button>
@@ -185,8 +186,8 @@ export default function NotificationsPageClient({
               <AnimatePresence>
                 {isFilterOpen && (
                   <>
-                    <div 
-                      className="fixed inset-0 z-10" 
+                    <div
+                      className="fixed inset-0 z-10"
                       onClick={() => setIsFilterOpen(false)}
                     />
                     <motion.div
@@ -203,7 +204,9 @@ export default function NotificationsPageClient({
                             setIsFilterOpen(false);
                           }}
                           className={`w-full text-left px-6 py-3 text-lg font-bold transition-colors hover:bg-gray-50 ${
-                            filterType === type ? "text-[#ffb755]" : "text-[#1a3b5c]"
+                            filterType === type
+                              ? "text-[#ffb755]"
+                              : "text-[#1a3b5c]"
                           }`}
                         >
                           {filterLabels[type]}

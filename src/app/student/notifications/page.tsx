@@ -21,9 +21,6 @@ export default async function StudentNotificationsPage() {
   }));
 
   return (
-    <NotificationsList
-      initialNotifications={notifications}
-      student={student}
-    />
+    <NotificationsList initialNotifications={notifications} student={student} />
   );
 }

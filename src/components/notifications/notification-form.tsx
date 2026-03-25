@@ -1,7 +1,15 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ChevronDown, Plus, Search, Trash2, X, AlertCircle, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Plus,
+  Search,
+  Trash2,
+  Users,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import toast from "react-hot-toast";
@@ -10,9 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  getRecipientCountAction,
   type SendNotificationData,
   sendNewNotificationAction,
-  getRecipientCountAction,
 } from "@/lib/actions/staff-notifications";
 import type { StudentBasicInfo } from "@/types/student";
 
@@ -25,24 +33,38 @@ type NotificationFormProps = {
 };
 
 // Custom checkbox for the orange theme
-const CustomCheckbox = ({ checked, onChange, label, id }: { checked: boolean; onChange: (v: boolean) => void; label: string, id: string }) => (
+const CustomCheckbox = ({
+  checked,
+  onChange,
+  label,
+  id,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  id: string;
+}) => (
   <label htmlFor={id} className="flex items-center gap-3 cursor-pointer group">
-    <div 
+    <div
       className={`size-6 rounded-md border-2 flex items-center justify-center transition-all ${
-        checked ? "bg-[#F4A261] border-[#F4A261]" : "border-gray-300 group-hover:border-[#F4A261]"
+        checked
+          ? "bg-[#F4A261] border-[#F4A261]"
+          : "border-gray-300 group-hover:border-[#F4A261]"
       }`}
     >
       {checked && <X className="size-4 text-white rotate-45" strokeWidth={4} />}
     </div>
-    <span className={`text-xl font-bold transition-colors ${checked ? "text-[#1D3557]" : "text-gray-500"}`}>
+    <span
+      className={`text-xl font-bold transition-colors ${checked ? "text-[#1D3557]" : "text-gray-500"}`}
+    >
       {label}
     </span>
-    <input 
+    <input
       id={id}
-      type="checkbox" 
-      className="hidden" 
-      checked={checked} 
-      onChange={(e) => onChange(e.target.checked)} 
+      type="checkbox"
+      className="hidden"
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
     />
   </label>
 );
@@ -61,7 +83,8 @@ export default function NotificationForm({
 
   // Single student selection
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState<StudentBasicInfo | null>(null);
+  const [selectedStudent, setSelectedStudent] =
+    useState<StudentBasicInfo | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Group selection
@@ -73,7 +96,9 @@ export default function NotificationForm({
   const [recipientCount, setRecipientCount] = useState<number>(students.length);
 
   // Quick templates
-  const [templates, setTemplates] = useState<{title: string, message: string}[]>([]);
+  const [templates, setTemplates] = useState<
+    { title: string; message: string }[]
+  >([]);
   const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
 
   const majors = useMemo(
@@ -95,7 +120,9 @@ export default function NotificationForm({
     }
   }, [storageKey]);
 
-  const saveTemplates = (nextTemplates: {title: string, message: string}[]) => {
+  const saveTemplates = (
+    nextTemplates: { title: string; message: string }[],
+  ) => {
     setTemplates(nextTemplates);
     localStorage.setItem(storageKey, JSON.stringify(nextTemplates));
   };
@@ -105,7 +132,7 @@ export default function NotificationForm({
       toast.error("يرجى تعبئة العنوان والرسالة لحفظهما كقالب");
       return;
     }
-    if (templates.some(t => t.title === title)) {
+    if (templates.some((t) => t.title === title)) {
       toast.error("هذا القالب موجود بالفعل");
       return;
     }
@@ -118,7 +145,10 @@ export default function NotificationForm({
     saveTemplates(templates.filter((t) => t.title !== titleToDelete));
   };
 
-  const handleSelectTemplate = (template: {title: string, message: string}) => {
+  const handleSelectTemplate = (template: {
+    title: string;
+    message: string;
+  }) => {
     setTitle(template.title);
     setMessage(template.message);
     setIsTemplateDropdownOpen(false);
@@ -144,7 +174,9 @@ export default function NotificationForm({
       const count = await getRecipientCountAction({
         recipientType,
         major: major || undefined,
-        graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
+        graduationYear: graduationYear
+          ? parseInt(graduationYear, 10)
+          : undefined,
         status,
         studentId: selectedStudent?.id,
       });
@@ -161,7 +193,7 @@ export default function NotificationForm({
     }
 
     if (recipientType === "all") {
-       if (!confirm("هل أنت متأكد من إرسال هذا الإشعار لجميع الطلاب؟")) return;
+      if (!confirm("هل أنت متأكد من إرسال هذا الإشعار لجميع الطلاب؟")) return;
     }
 
     const data: SendNotificationData = {
@@ -178,7 +210,7 @@ export default function NotificationForm({
       data.studentId = selectedStudent.id;
     } else if (recipientType === "group") {
       if (major) data.major = major;
-      if (graduationYear) data.graduationYear = parseInt(graduationYear);
+      if (graduationYear) data.graduationYear = parseInt(graduationYear, 10);
       data.status = status;
     }
 
@@ -230,11 +262,15 @@ export default function NotificationForm({
               <div className="relative flex-1">
                 <button
                   type="button"
-                  onClick={() => setIsTemplateDropdownOpen(!isTemplateDropdownOpen)}
+                  onClick={() =>
+                    setIsTemplateDropdownOpen(!isTemplateDropdownOpen)
+                  }
                   className="flex h-16 w-full items-center justify-between rounded-2xl bg-[#1D3557] px-6 text-xl text-white transition-all hover:bg-[#1D3557]/90"
                 >
                   <span className="truncate">{title || "اختر إشعار ..."}</span>
-                  <ChevronDown className={`size-6 transition-transform ${isTemplateDropdownOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`size-6 transition-transform ${isTemplateDropdownOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 <AnimatePresence>
@@ -247,7 +283,12 @@ export default function NotificationForm({
                       className="absolute z-50 mt-2 w-full max-h-64 overflow-y-auto rounded-2xl bg-[#1D3557] p-2 shadow-xl border border-white/10"
                     >
                       {templates.length === 0 ? (
-                        <p key="no-templates" className="p-4 text-center text-white/50">لا توجد قوالب محفوظة</p>
+                        <p
+                          key="no-templates"
+                          className="p-4 text-center text-white/50"
+                        >
+                          لا توجد قوالب محفوظة
+                        </p>
                       ) : (
                         templates.map((t, index) => (
                           <div
@@ -255,7 +296,9 @@ export default function NotificationForm({
                             onClick={() => handleSelectTemplate(t)}
                             className="flex items-center justify-between rounded-xl px-4 py-3 text-white transition-colors hover:bg-white/10 cursor-pointer group"
                           >
-                            <span className="truncate font-medium">{t.title}</span>
+                            <span className="truncate font-medium">
+                              {t.title}
+                            </span>
                             <button
                               type="button"
                               onClick={(e) => handleDeleteTemplate(e, t.title)}
@@ -285,15 +328,17 @@ export default function NotificationForm({
           {/* Content Inputs */}
           <div className="space-y-6">
             <div className="space-y-4">
-               <Label className="block text-2xl font-bold text-black">محتوى الإشعار</Label>
-               <Input
+              <Label className="block text-2xl font-bold text-black">
+                محتوى الإشعار
+              </Label>
+              <Input
                 placeholder="عنوان الإشعار..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="h-16 rounded-2xl border-none bg-gray-100 px-6 text-xl text-[#1D3557] placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#1D3557]"
               />
             </div>
-            
+
             <Textarea
               placeholder="اكتب رسالتك هنا..."
               value={message}
@@ -305,16 +350,20 @@ export default function NotificationForm({
           {/* Recipient Selection */}
           <div className="rounded-[30px] bg-[#F4A261]/10 p-6 md:p-10 space-y-8">
             <div className="flex items-center justify-between">
-               <Label className="text-2xl font-bold text-black">تحديد المستلمين:</Label>
-               <div className="flex items-center gap-2 rounded-full bg-[#1D3557] px-4 py-1.5 text-white">
-                  <Users className="size-5" />
-                  <span className="text-lg font-bold">{recipientCount} مستلم</span>
-               </div>
+              <Label className="text-2xl font-bold text-black">
+                تحديد المستلمين:
+              </Label>
+              <div className="flex items-center gap-2 rounded-full bg-[#1D3557] px-4 py-1.5 text-white">
+                <Users className="size-5" />
+                <span className="text-lg font-bold">
+                  {recipientCount} مستلم
+                </span>
+              </div>
             </div>
 
             <div className="space-y-6">
               {/* All Students */}
-              <CustomCheckbox 
+              <CustomCheckbox
                 id="all"
                 label="جميع الطلاب"
                 checked={recipientType === "all"}
@@ -323,13 +372,13 @@ export default function NotificationForm({
 
               {/* Specific Group */}
               <div className="space-y-4">
-                <CustomCheckbox 
+                <CustomCheckbox
                   id="group"
                   label="مجموعة معينة"
                   checked={recipientType === "group"}
                   onChange={() => setRecipientType("group")}
                 />
-                
+
                 <AnimatePresence>
                   {recipientType === "group" && (
                     <motion.div
@@ -347,7 +396,11 @@ export default function NotificationForm({
                             className="h-14 w-full rounded-2xl bg-gray-100 px-4 text-xl font-bold text-[#1D3557]/70 appearance-none outline-none focus:ring-2 focus:ring-[#1D3557]"
                           >
                             <option value="">التخصص</option>
-                            {majors.map(m => <option key={m} value={m}>{m}</option>)}
+                            {majors.map((m) => (
+                              <option key={m} value={m}>
+                                {m}
+                              </option>
+                            ))}
                           </select>
                           <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 size-5 pointer-events-none text-[#1D3557]/50" />
                         </div>
@@ -380,7 +433,7 @@ export default function NotificationForm({
 
               {/* Single Student */}
               <div className="space-y-4">
-                <CustomCheckbox 
+                <CustomCheckbox
                   id="single"
                   label="طالب واحد"
                   checked={recipientType === "single"}
@@ -410,26 +463,32 @@ export default function NotificationForm({
                         <Search className="absolute right-4 top-[calc(50%+4px)] -translate-y-1/2 size-6 text-[#F4A261]" />
                       </div>
 
-                      {isDropdownOpen && searchQuery && filteredStudents.length > 0 && (
-                        <motion.div
-                          key="student-search-results"
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="absolute z-20 mt-2 max-h-60 w-[calc(100%-32px)] overflow-auto rounded-2xl border border-gray-100 bg-white shadow-2xl"
-                        >
-                          {filteredStudents.map((s) => (
-                            <button
-                              key={s.id}
-                              type="button"
-                              className="w-full px-6 py-4 text-right text-[#1D3557] transition-colors hover:bg-gray-50 flex flex-col border-b last:border-b-0"
-                              onClick={() => handleStudentSelect(s)}
-                            >
-                              <span className="font-bold text-lg">{s.nameAr || s.name}</span>
-                              <span className="text-sm opacity-60">{s.academicId} - {s.major}</span>
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
+                      {isDropdownOpen &&
+                        searchQuery &&
+                        filteredStudents.length > 0 && (
+                          <motion.div
+                            key="student-search-results"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="absolute z-20 mt-2 max-h-60 w-[calc(100%-32px)] overflow-auto rounded-2xl border border-gray-100 bg-white shadow-2xl"
+                          >
+                            {filteredStudents.map((s) => (
+                              <button
+                                key={s.id}
+                                type="button"
+                                className="w-full px-6 py-4 text-right text-[#1D3557] transition-colors hover:bg-gray-50 flex flex-col border-b last:border-b-0"
+                                onClick={() => handleStudentSelect(s)}
+                              >
+                                <span className="font-bold text-lg">
+                                  {s.nameAr || s.name}
+                                </span>
+                                <span className="text-sm opacity-60">
+                                  {s.academicId} - {s.major}
+                                </span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -441,7 +500,12 @@ export default function NotificationForm({
           <div className="pt-6">
             <Button
               type="submit"
-              disabled={isPending || !title || !message || (recipientType === "single" && !selectedStudent)}
+              disabled={
+                isPending ||
+                !title ||
+                !message ||
+                (recipientType === "single" && !selectedStudent)
+              }
               className="h-[70px] w-full rounded-full bg-[#1D3557] text-2xl font-bold text-white shadow-xl hover:bg-[#1D3557]/90 active:scale-95 disabled:opacity-50 transition-all"
             >
               {isPending ? "جاري الإرسال..." : "إرسال الإشعار"}

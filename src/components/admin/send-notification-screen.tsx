@@ -1,5 +1,6 @@
 "use client";
 
+import type { NotificationTemplate } from "@prisma/client";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ChevronDown, Plus, Search, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -14,7 +15,6 @@ import {
   deleteTemplateAction,
 } from "@/lib/actions/notification-templates";
 import { sendNewNotificationAction } from "@/lib/actions/staff-notifications";
-import type { NotificationTemplate } from "@prisma/client";
 
 type SendNotificationScreenProps = {
   staffUsers: { id: string; nameAr: string | null; name: string | null }[];

@@ -148,8 +148,12 @@ export async function getAdminSettings() {
     if (!user) return null;
 
     return {
-      emailNotifications: (user.emailNotifications ? "on" : "off") as "on" | "off",
-      siteNotifications: (user.siteNotifications ? "on" : "off") as "on" | "off",
+      emailNotifications: (user.emailNotifications ? "on" : "off") as
+        | "on"
+        | "off",
+      siteNotifications: (user.siteNotifications ? "on" : "off") as
+        | "on"
+        | "off",
       language: user.language as "ar" | "en",
       theme: user.theme as "light" | "dark",
     };

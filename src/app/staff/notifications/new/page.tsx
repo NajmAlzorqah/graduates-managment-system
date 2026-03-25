@@ -1,7 +1,7 @@
+import { redirect } from "next/navigation";
 import NotificationForm from "@/components/notifications/notification-form";
 import { getStudentsBasicInfo } from "@/lib/api/students";
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 export default async function NewNotificationPage() {
   const session = await auth();
@@ -13,10 +13,10 @@ export default async function NewNotificationPage() {
 
   return (
     <div className="w-full">
-      <NotificationForm 
-        students={students} 
-        backLink="/staff/notifications" 
-        role="STAFF" 
+      <NotificationForm
+        students={students}
+        backLink="/staff/notifications"
+        role="STAFF"
       />
     </div>
   );

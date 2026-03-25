@@ -1,8 +1,6 @@
 import Image from "next/image";
 import LoginForm from "@/components/auth/login-form";
-
-const universityLogo =
-  "http://localhost:3845/assets/877a5d886b0f7cc527bec70476465f07316a8bf3.png";
+import universityLogo from "../../../../public/logo.png";
 
 export default function LoginPage() {
   return (

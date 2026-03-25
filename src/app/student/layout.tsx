@@ -1,8 +1,8 @@
 import StudentBottomNav from "@/components/student/student-bottom-nav";
-import LogoutButton from "@/components/ui/logout-button";
 import StudentRefresh from "@/components/student/student-refresh";
-import { auth } from "@/lib/auth";
+import LogoutButton from "@/components/ui/logout-button";
 import { getUnreadNotificationsCount } from "@/lib/actions/student";
+import { auth } from "@/lib/auth";
 
 export default async function StudentLayout({
   children,
@@ -10,8 +10,8 @@ export default async function StudentLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  const unreadCount = session?.user?.id 
-    ? await getUnreadNotificationsCount() 
+  const unreadCount = session?.user?.id
+    ? await getUnreadNotificationsCount()
     : 0;
 
   return (

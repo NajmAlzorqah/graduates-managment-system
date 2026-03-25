@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle2, MessageSquare, Send, Loader2 } from "lucide-react";
-import type { StudentWithSteps } from "@/types/student";
 import type { NotificationTemplate } from "@prisma/client";
-import { updateStepStatusAction } from "@/lib/actions/staff-students";
-import { sendNewNotificationAction } from "@/lib/actions/staff-notifications";
+import { AnimatePresence, motion } from "framer-motion";
+import { CheckCircle2, Loader2, MessageSquare, Send, X } from "lucide-react";
+import { useState } from "react";
 import toast from "react-hot-toast";
+import { sendNewNotificationAction } from "@/lib/actions/staff-notifications";
+import { updateStepStatusAction } from "@/lib/actions/staff-students";
+import type { StudentWithSteps } from "@/types/student";
 
 type Props = {
   isOpen: boolean;
@@ -48,13 +48,6 @@ export default function UpdateStatusModal({
 
     if (res.success) {
       toast.success("تم تحديث الحالة بنجاح");
-      // Pre-fill notification if it was completed
-      if (nextStatus === "COMPLETED") {
-        const step = student.steps.find((s) => s.id === stepId);
-        setNotificationTitle(`تحديث حالة الشهادة: ${step?.label}`);
-        setNotificationMessage(`تم إكمال خطوة "${step?.label}" بنجاح.`);
-        setShowNotificationForm(true);
-      }
     } else {
       toast.error(res.error || "فشل في تحديث الحالة");
     }

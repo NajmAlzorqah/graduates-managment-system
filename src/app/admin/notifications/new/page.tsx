@@ -17,10 +17,10 @@ export default async function AdminNewNotificationPage() {
   const students = await getStudentsBasicInfo();
 
   return (
-    <NotificationForm 
-      students={students} 
-      backLink="/admin/notifications" 
-      role="ADMIN" 
+    <NotificationForm
+      students={students}
+      backLink="/admin/notifications"
+      role="ADMIN"
     />
   );
 }

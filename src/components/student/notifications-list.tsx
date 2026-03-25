@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 import NotificationCard, {
@@ -71,7 +71,9 @@ export default function NotificationsList({
   const [notifications, setNotifications] =
     useState<SerializedNotification[]>(initialNotifications);
   const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "unread" | "read">("all");
+  const [filterType, setFilterType] = useState<"all" | "unread" | "read">(
+    "all",
+  );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -81,7 +83,8 @@ export default function NotificationsList({
 
   const filtered = notifications.filter((n) => {
     // Search filter
-    const matchesSearch = n.title.includes(search) || n.message.includes(search);
+    const matchesSearch =
+      n.title.includes(search) || n.message.includes(search);
     if (!matchesSearch) return false;
 
     // Type filter
@@ -94,7 +97,7 @@ export default function NotificationsList({
   const filterLabels = {
     all: "الكل",
     unread: "غير مقروء",
-    read: "مقروء"
+    read: "مقروء",
   };
 
   function handleMarkRead(id: string) {
@@ -117,7 +120,6 @@ export default function NotificationsList({
         } catch (error) {
           console.error("Failed to mark as read:", error);
         }
-     
       });
     }
   }
@@ -137,7 +139,7 @@ export default function NotificationsList({
         } else {
           toast.error("فشل حذف الإشعار");
         }
-      } catch (error) {
+      } catch (_error) {
         toast.error("حدث خطأ ما");
       }
     });
@@ -160,10 +162,9 @@ export default function NotificationsList({
         } else {
           toast.error("فشل حذف الإشعارات");
         }
-      } catch (error) {
+      } catch (_error) {
         toast.error("حدث خطأ ما");
       }
-      
     });
   }
 
@@ -187,7 +188,9 @@ export default function NotificationsList({
             className="flex items-center gap-2 bg-[#ffb755] text-white font-arabic font-bold text-sm px-4 py-2 rounded-full flex-shrink-0 shadow-sm min-w-[100px] justify-between transition-all active:scale-95"
             aria-label="تصفية الإشعارات"
           >
-            <div className={`transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`}>
+            <div
+              className={`transition-transform duration-200 ${isFilterOpen ? "rotate-180" : ""}`}
+            >
               <ChevronDownIcon />
             </div>
             <span>{filterLabels[filterType]}</span>
@@ -195,8 +198,8 @@ export default function NotificationsList({
 
           {isFilterOpen && (
             <>
-              <div 
-                className="fixed inset-0 z-10" 
+              <div
+                className="fixed inset-0 z-10"
                 onClick={() => setIsFilterOpen(false)}
               />
               <div className="absolute top-full left-0 mt-2 w-36 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">

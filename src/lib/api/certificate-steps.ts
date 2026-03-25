@@ -35,7 +35,13 @@ export async function getStepsByStudent(
 
 export async function updateStepStatus(
   stepId: string,
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "NEEDS_VERIFICATION" | "MODIFIED" | "REJECTED",
+  status:
+    | "PENDING"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "NEEDS_VERIFICATION"
+    | "MODIFIED"
+    | "REJECTED",
   staffId: string,
 ): Promise<CertificateStep> {
   const step = await prisma.certificateStep.update({
