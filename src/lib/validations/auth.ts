@@ -9,7 +9,8 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const registerSchema = z
   .object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
+    nameAr: z.string().min(1, "Arabic Name is required"),
+    name: z.string().optional().or(z.literal("")),
     academicId: z
       .string()
       .min(3, "Academic ID must be at least 3 characters")
@@ -18,7 +19,7 @@ export const registerSchema = z
         /^[a-zA-Z0-9]+$/,
         "Academic ID must contain only letters and numbers",
       ),
-    email: z.string().email("Please enter a valid email address"),
+    email: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")

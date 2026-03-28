@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { StaffHomeData, StaffTodoItem } from "@/types/staff";
 
-function getDayBounds(input: Date): { start: Date; end: Date } {  
+function getDayBounds(input: Date): { start: Date; end: Date } {
   const start = new Date(input);
   start.setHours(0, 0, 0, 0);
 
@@ -11,7 +11,9 @@ function getDayBounds(input: Date): { start: Date; end: Date } {
   return { start, end };
 }
 
-export async function getStaffHomeData(staffId?: string): Promise<StaffHomeData> {
+export async function getStaffHomeData(
+  staffId?: string,
+): Promise<StaffHomeData> {
   const now = new Date();
   const { start, end } = getDayBounds(now);
 
@@ -42,7 +44,7 @@ export async function getStaffHomeData(staffId?: string): Promise<StaffHomeData>
       },
     }),
     prisma.certificate.count(),
-    staffId 
+    staffId
       ? prisma.todo.findMany({
           where: {
             staffId,
@@ -52,8 +54,8 @@ export async function getStaffHomeData(staffId?: string): Promise<StaffHomeData>
               select: {
                 name: true,
                 nameAr: true,
-              }
-            }
+              },
+            },
           },
           orderBy: {
             createdAt: "desc",

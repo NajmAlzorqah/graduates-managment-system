@@ -27,8 +27,9 @@ export async function POST(request: Request, { params }: Params) {
 
   const form = await reviewGraduationForm(
     id,
-    parsed.data.status as "APPROVED" | "REJECTED",
+    parsed.data.status,
     session.user.id,
+    parsed.data.comments,
   );
   return NextResponse.json(form);
 }

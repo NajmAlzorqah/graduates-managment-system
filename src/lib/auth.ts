@@ -28,7 +28,12 @@ const config = {
         if (!(await bcrypt.compare(password, user.passwordHash))) return null;
         if (!user.isApproved) return null;
 
-        return { id: user.id, name: user.name, role: user.role };
+        return {
+          id: user.id,
+          name: user.name,
+          nameAr: user.nameAr,
+          role: user.role,
+        };
       },
     }),
   ],
@@ -36,9 +41,18 @@ const config = {
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: { role?: UserRole } }) {
+    async jwt({
+      token,
+      user,
+    }: {
+      token: JWT;
+      user?: { role?: UserRole; nameAr?: string | null };
+    }) {
       if (user?.role) {
         token.role = user.role;
+      }
+      if (user?.nameAr) {
+        token.nameAr = user.nameAr;
       }
       return token;
     },
@@ -47,11 +61,12 @@ const config = {
       token,
     }: {
       session: Session;
-      token: JWT & { role?: UserRole };
+      token: JWT & { role?: UserRole; nameAr?: string | null };
     }) {
       if (session.user) {
         (session.user as { id?: string; role?: UserRole }).id = token.sub;
         (session.user as { id?: string; role?: UserRole }).role = token.role;
+        (session.user as { nameAr?: string | null }).nameAr = token.nameAr;
       }
       return session;
     },

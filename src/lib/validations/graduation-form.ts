@@ -1,21 +1,15 @@
 import { z } from "zod";
 
-const graduationFormStatusEnum = z.enum([
-  "DRAFT",
-  "SUBMITTED",
-  "UNDER_REVIEW",
-  "APPROVED",
-  "REJECTED",
-]);
-
 export const submitGraduationFormSchema = z.object({
-  major: z.string().min(1, "Major is required"),
+  fullName: z.string().min(1, "الاسم الرباعي مطلوب"),
+  passportName: z.string().min(1, "الاسم كما في جواز السفر مطلوب"),
+  major: z.string().min(1, "التخصص مطلوب"),
   graduationYear: z.coerce
     .number()
     .int()
-    .min(2000, "Graduation year must be 2000 or later")
-    .max(2100, "Graduation year must be 2100 or earlier"),
-  studentCardNumber: z.string().min(1, "Student card number is required"),
+    .min(2000, "سنة التخرج يجب أن تكون 2000 أو بعدها")
+    .max(2100, "سنة التخرج يجب أن تكون 2100 أو قبلها"),
+  studentCardNumber: z.string().min(1, "رقم البطاقة الجامعية مطلوب"),
 });
 
 export type SubmitGraduationFormInput = z.infer<
@@ -23,10 +17,7 @@ export type SubmitGraduationFormInput = z.infer<
 >;
 
 export const reviewGraduationFormSchema = z.object({
-  status: graduationFormStatusEnum.refine(
-    (val) => val === "APPROVED" || val === "REJECTED",
-    { message: "Status must be APPROVED or REJECTED" },
-  ),
+  status: z.enum(["APPROVED", "REJECTED", "NEEDS_CONFIRMATION"]),
   comments: z.string().max(2000).optional(),
 });
 

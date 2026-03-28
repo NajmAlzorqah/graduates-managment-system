@@ -71,21 +71,14 @@ function FormField({
 export default function CreateAccountForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [accountType, setAccountType] = useState<AccountType>("student");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
-      const action =
-        accountType === "student" ? createStudentAction : createStaffUserAction;
-      const result = await action(formData);
+      const result = await createStudentAction(formData);
       if (result.success) {
-        toast.success(
-          accountType === "student"
-            ? "تم إنشاء حساب الطالب بنجاح"
-            : "تم إنشاء حساب الموظف بنجاح",
-        );
+        toast.success("تم إنشاء حساب الطالب بنجاح");
         router.push("/staff/students");
         router.refresh();
       } else {
@@ -103,88 +96,67 @@ export default function CreateAccountForm() {
           className="mb-6 text-right text-[22px] font-bold text-[#1a3b5c] md:mb-8 md:text-[28px] xl:text-[32px]"
           dir="rtl"
         >
-          إنشاء حساب جديد
+          إنشاء حساب طالب جديد
         </h1>
 
-        {/* Account type selector */}
-        <div
-          className="mb-6 flex rounded-[29px] bg-[#ececec] p-1 md:mb-8"
-          dir="rtl"
-        >
-          <button
-            type="button"
-            onClick={() => setAccountType("student")}
-            className={`flex-1 rounded-[25px] py-2.5 text-sm font-bold transition-all md:text-base ${
-              accountType === "student"
-                ? "bg-[#1a3b5c] text-white shadow-sm"
-                : "text-[#1a3b5c]/60 hover:text-[#1a3b5c]"
-            }`}
-          >
-            طالب
-          </button>
-          <button
-            type="button"
-            onClick={() => setAccountType("staff")}
-            className={`flex-1 rounded-[25px] py-2.5 text-sm font-bold transition-all md:text-base ${
-              accountType === "staff"
-                ? "bg-[#1a3b5c] text-white shadow-sm"
-                : "text-[#1a3b5c]/60 hover:text-[#1a3b5c]"
-            }`}
-          >
-            موظف
-          </button>
-        </div>
-
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
-          {/* Name (English) */}
-          <FormField
-            label="الاسم (إنجليزي)"
-            name="name"
-            required
-            placeholder="Full name in English"
-          />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+            {/* Arabic Name (Required) */}
+            <FormField
+              label="الاسم الكامل (عربي)"
+              name="nameAr"
+              required
+              placeholder="الاسم الكامل بالعربية"
+            />
 
-          {/* Arabic name */}
-          <FormField
-            label="الاسم (عربي)"
-            name="nameAr"
-            placeholder="الاسم الكامل بالعربية"
-          />
+            {/* English Name (Optional) */}
+            <FormField
+              label="الاسم الكامل (إنجليزي)"
+              name="name"
+              placeholder="Full Name in English (Optional)"
+            />
+          </div>
 
-          {/* Academic ID */}
-          <FormField
-            label="الرقم الجامعي"
-            name="academicId"
-            required
-            placeholder="مثال: 2024001"
-          />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+            {/* Academic ID (Required) */}
+            <FormField
+              label="الرقم الجامعي"
+              name="academicId"
+              required
+              placeholder="مثال: 2024001"
+            />
 
-          {/* Email */}
-          <FormField
-            label="البريد الإلكتروني"
-            name="email"
-            type="email"
-            required
-            placeholder="example@university.edu"
-          />
+            {/* Email (Optional) */}
+            <FormField
+              label="البريد الإلكتروني"
+              name="email"
+              type="email"
+              placeholder="example@university.edu (اختياري)"
+            />
+          </div>
 
-          {/* Password */}
+          {/* Password (Required) */}
           <FormField
             label="كلمة المرور"
             name="password"
             type="password"
             required
-            placeholder="8 أحرف على الأقل، تشمل أرقاماً وأحرفاً كبيرة وصغيرة"
+            placeholder="8 أحرف على الأقل، تشمل أرقاماً وأحرفاً"
           />
 
-          {/* Student-only fields */}
-          {accountType === "student" && (
-            <>
-              {/* Major */}
-              <FormField label="التخصص" name="major">
+          {/* Student-only fields - Now always shown */}
+          <div className="mt-2 space-y-4 rounded-2xl bg-[#f8f9fa] p-4 md:mt-3 md:space-y-5 md:p-6">
+            <h3 className="text-right text-sm font-bold text-[#1a3b5c]/70 md:text-base">
+              بيانات التخصص والحالة
+            </h3>
+            
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+              {/* Major (Required for student) */}
+              <FormField label="التخصص" name="major" required>
                 <select
                   id="major"
                   name="major"
+                  required
                   className="h-[52px] w-full cursor-pointer appearance-none rounded-[29px] border-0 bg-white px-5 text-[#1a3b5c] shadow-[0_4px_4px_rgba(0,0,0,0.12)] focus:outline-none focus:ring-2 focus:ring-[#1a3b5c]/20 md:text-base"
                   dir="rtl"
                 >
@@ -197,40 +169,40 @@ export default function CreateAccountForm() {
                 </select>
               </FormField>
 
-              {/* Student card number */}
+              {/* Student card number (Optional) */}
               <FormField
                 label="رقم بطاقة الطالب"
                 name="studentCardNumber"
                 placeholder="مثال: SC-2024-001"
               />
 
-              {/* Graduation year */}
+              {/* Graduation year (Optional) */}
               <FormField
                 label="سنة التخرج"
                 name="graduationYear"
                 type="number"
                 placeholder="مثال: 2026"
               />
-            </>
-          )}
+            </div>
+          </div>
 
           {/* Action buttons */}
           <div
-            className="mt-2 flex flex-col gap-3 sm:flex-row-reverse sm:justify-start"
+            className="mt-6 flex flex-col gap-3 sm:flex-row-reverse sm:justify-start"
             dir="rtl"
           >
             <button
               type="submit"
               disabled={isPending}
-              className="flex h-[52px] items-center justify-center rounded-[29px] bg-[#ffb755] px-8 text-base font-bold text-white shadow-[0_4px_4px_rgba(0,0,0,0.12)] transition-colors hover:bg-[#f0a535] disabled:opacity-60 md:px-10"
+              className="flex h-[52px] items-center justify-center rounded-[29px] bg-[#ffb755] px-12 text-base font-bold text-white shadow-[0_4px_12px_rgba(255,183,85,0.4)] transition-all hover:bg-[#f0a535] hover:shadow-[0_6px_16px_rgba(255,183,85,0.5)] disabled:opacity-60 md:text-lg"
             >
-              {isPending ? "جاري الإنشاء..." : "إنشاء الحساب"}
+              {isPending ? "جاري الإنشاء..." : "إنشاء حساب الطالب"}
             </button>
             <button
               type="button"
               onClick={() => router.back()}
               disabled={isPending}
-              className="flex h-[52px] items-center justify-center rounded-[29px] bg-[#ececec] px-8 text-base font-bold text-[#1a3b5c] transition-colors hover:bg-[#e0e0e0] disabled:opacity-60 md:px-10"
+              className="flex h-[52px] items-center justify-center rounded-[29px] bg-[#ececec] px-8 text-base font-bold text-[#1a3b5c] transition-colors hover:bg-[#e0e0e0] disabled:opacity-60"
             >
               إلغاء
             </button>

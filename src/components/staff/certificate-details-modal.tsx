@@ -4,10 +4,15 @@ import {
   Circle,
   ExternalLink,
   FileText,
+  Loader2,
+  ThumbsDown,
+  ThumbsUp,
   User as UserIcon,
   X,
 } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import type { StudentWithSteps } from "@/types/student";
 
 type Props = {
@@ -21,11 +26,49 @@ export default function CertificateDetailsModal({
   onClose,
   student,
 }: Props) {
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [comments, setComments] = useState("");
+  const [showRejectForm, setShowRejectForm] = useState(false);
+
   if (!student) return null;
 
   const passportDoc = student.documents.find(
     (d) => d.documentType === "PASSPORT",
   );
+
+  const handleReview = async (status: "NEEDS_CONFIRMATION" | "REJECTED") => {
+    if (status === "REJECTED" && !comments.trim()) {
+      toast.error("يرجى إدخال سبب الرفض");
+      return;
+    }
+
+    if (!student.graduationFormId) {
+      toast.error("بيانات النموذج غير متوفرة");
+      return;
+    }
+
+    setIsReviewing(true);
+    try {
+      const res = await fetch(
+        `/api/graduation-form/${student.graduationFormId}/review`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status, comments }),
+        },
+      );
+
+      if (!res.ok) throw new Error("فشل في تحديث حالة النموذج");
+
+      toast.success("تم تحديث حالة النموذج بنجاح");
+      onClose();
+      window.location.reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "حدث خطأ ما");
+    } finally {
+      setIsReviewing(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -35,7 +78,7 @@ export default function CertificateDetailsModal({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-[#ececec] rounded-[40px] w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
+            className="bg-[#ececec] rounded-[40px] w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
           >
             {/* Header */}
             <div className="bg-[#1a3b5c] p-6 text-white flex items-center justify-between">
@@ -52,6 +95,85 @@ export default function CertificateDetailsModal({
             </div>
 
             <div className="p-8 overflow-y-auto custom-scrollbar">
+              {/* Review Action Section */}
+              {student.graduationFormStatus === "SUBMITTED" && (
+                <div
+                  className="bg-white rounded-[30px] p-6 shadow-sm border-2 border-[#ffb755] mb-8"
+                  dir="rtl"
+                >
+                  <h3 className="text-xl font-bold text-[#1a3b5c] mb-4 flex items-center gap-2">
+                    <CheckCircle2 className="w-6 h-6 text-[#ffb755]" />
+                    مراجعة نموذج التخرج
+                  </h3>
+                  <p className="text-[#1a3b5c]/70 font-bold mb-6">
+                    يرجى مراجعة البيانات أدناه والتحقق من صحتها قبل الاعتماد.
+                  </p>
+
+                  {showRejectForm ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-4"
+                    >
+                      <textarea
+                        value={comments}
+                        onChange={(e) => setComments(e.target.value)}
+                        placeholder="يرجى كتابة أسباب الرفض أو الملاحظات..."
+                        className="w-full bg-[#f3f4f6] rounded-2xl p-4 border-none focus:ring-2 focus:ring-[#ffb755] font-bold text-[#1a3b5c] h-32 resize-none"
+                      />
+                      <div className="flex gap-4">
+                        <button
+                          type="button"
+                          onClick={() => handleReview("REJECTED")}
+                          disabled={isReviewing}
+                          className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-all flex items-center justify-center gap-2"
+                        >
+                          {isReviewing ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            "تأكيد الرفض وإرسال ملاحظات"
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowRejectForm(false)}
+                          className="px-8 bg-gray-200 text-[#1a3b5c] font-bold py-3 rounded-xl hover:bg-gray-300 transition-all"
+                        >
+                          إلغاء
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div className="flex flex-wrap gap-4">
+                      <button
+                        type="button"
+                        onClick={() => handleReview("NEEDS_CONFIRMATION")}
+                        disabled={isReviewing}
+                        className="flex-1 min-w-[200px] bg-[#1a3b5c] text-white font-bold py-4 rounded-2xl hover:bg-[#1a3b5c]/90 transition-all shadow-lg flex items-center justify-center gap-3"
+                      >
+                        {isReviewing ? (
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                        ) : (
+                          <>
+                            <ThumbsUp className="w-6 h-6" />
+                            <span>قبول (طلب تأكيد الطالب)</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowRejectForm(true)}
+                        disabled={isReviewing}
+                        className="flex-1 min-w-[200px] bg-white text-red-500 border-2 border-red-500 font-bold py-4 rounded-2xl hover:bg-red-50 transition-all flex items-center justify-center gap-3"
+                      >
+                        <ThumbsDown className="w-6 h-6" />
+                        <span>رفض (يوجد أخطاء)</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Student Basic Info Section */}
               <div
                 className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
@@ -86,12 +208,30 @@ export default function CertificateDetailsModal({
                         {student.name || "غير متوفر"}
                       </p>
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-[#1a3b5c]/50 font-bold">
+                          التخصص
+                        </p>
+                        <p className="text-xl font-bold text-[#1a3b5c]">
+                          {student.major}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-[#1a3b5c]/50 font-bold">
+                          رقم البطاقة
+                        </p>
+                        <p className="text-xl font-bold text-[#1a3b5c]">
+                          {student.studentCardNumber || "---"}
+                        </p>
+                      </div>
+                    </div>
                     <div>
                       <p className="text-sm text-[#1a3b5c]/50 font-bold">
-                        التخصص
+                        سنة التخرج
                       </p>
                       <p className="text-xl font-bold text-[#1a3b5c]">
-                        {student.major}
+                        {student.graduationYear || "---"}
                       </p>
                     </div>
                   </div>

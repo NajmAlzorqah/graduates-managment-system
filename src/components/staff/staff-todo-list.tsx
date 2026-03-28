@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState, useId } from "react";
 import type { StaffTodoItem } from "@/types/staff";
-import { toggleTodo, deleteTodo, createTodo, updateTodo } from "@/lib/actions/staff-todo";
+import {
+  toggleTodo,
+  deleteTodo,
+  createTodo,
+  updateTodo,
+} from "@/lib/actions/staff-todo";
 import toast from "react-hot-toast";
 
 type StaffTodoListProps = {
@@ -12,11 +17,11 @@ type StaffTodoListProps = {
   isAdmin?: boolean;
 };
 
-export default function StaffTodoList({ 
-  initialTodos, 
-  staffMembers = [], 
+export default function StaffTodoList({
+  initialTodos,
+  staffMembers = [],
   currentUserId,
-  isAdmin = false 
+  isAdmin = false,
 }: StaffTodoListProps) {
   const [todos, setTodos] = useState<StaffTodoItem[]>(initialTodos);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -88,7 +93,7 @@ export default function StaffTodoList({
           todo.id === id ? { ...todo, title: editValue.trim() } : todo,
         ),
       );
-      
+
       const result = await updateTodo(id, { title: editValue.trim() });
       if (!result.success) {
         setTodos(oldTodos);
@@ -117,7 +122,9 @@ export default function StaffTodoList({
         title: result.todo.title,
         completed: result.todo.completed,
         staffId: result.todo.staffId,
-        staffName: staffMembers.find(s => s.id === result.todo?.staffId)?.name || "Unknown",
+        staffName:
+          staffMembers.find((s) => s.id === result.todo?.staffId)?.name ||
+          "Unknown",
       };
       setTodos((prev) => [newTodo, ...prev]);
       setShowAddModal(false);
@@ -283,11 +290,16 @@ export default function StaffTodoList({
       {/* Simple Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl md:p-8" dir="rtl">
-            <h3 className="mb-4 text-xl font-bold text-[#1a3b5c] md:text-2xl">Add New Task</h3>
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl md:p-8"
+            dir="rtl"
+          >
+            <h3 className="mb-4 text-xl font-bold text-[#1a3b5c] md:text-2xl">
+              Add New Task
+            </h3>
             <form onSubmit={handleAddTodo} className="space-y-4">
               <div>
-                <label 
+                <label
                   htmlFor={taskTitleId}
                   className="mb-1 block text-sm font-medium text-gray-700"
                 >
@@ -303,10 +315,10 @@ export default function StaffTodoList({
                   autoFocus
                 />
               </div>
-              
+
               {isAdmin && staffMembers.length > 0 && (
                 <div>
-                  <label 
+                  <label
                     htmlFor={staffSelectId}
                     className="mb-1 block text-sm font-medium text-gray-700"
                   >

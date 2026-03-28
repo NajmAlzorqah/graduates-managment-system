@@ -13,6 +13,7 @@ type StaffNavProps = {
 type StaffNavIconName =
   | "home"
   | "students"
+  | "user-plus"
   | "certificate"
   | "notification"
   | "reports"
@@ -31,6 +32,12 @@ const STAFF_NAV_ITEMS: StaffNavItem[] = [
     id: "new-students",
     label: "New students",
     href: "/staff/students",
+    icon: "user-plus",
+  },
+  {
+    id: "manage-students",
+    label: "Manage students",
+    href: "/staff/manage-students",
     icon: "students",
   },
   {
@@ -79,6 +86,20 @@ function StaffNavIcon({
         fill={color}
       >
         <path d="M12.91 2.18a1.4 1.4 0 0 0-1.82 0L2.2 9.7a1.37 1.37 0 0 0 .9 2.4h1.47v7.12A2.8 2.8 0 0 0 7.37 22h9.26a2.8 2.8 0 0 0 2.8-2.79v-7.12h1.47a1.37 1.37 0 0 0 .9-2.4z" />
+      </svg>
+    );
+  }
+
+  if (icon === "user-plus") {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="size-7 xl:size-9"
+        fill={color}
+      >
+        <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-8 8c0-3.31 3.582-6 8-6s8 2.69 8 6H4Z" />
+        <path d="M19 3v2h-2v2h2v2h2V7h2V5h-2V3h-2Z" />
       </svg>
     );
   }

@@ -21,6 +21,25 @@ import {
 
 type ActionResult = { success: true } | { success: false; error: string };
 
+export async function deleteStudentAction(id: string): Promise<ActionResult> {
+  const session = await auth();
+  if (
+    !session?.user?.id ||
+    (session.user.role !== "STAFF" && session.user.role !== "ADMIN")
+  ) {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  try {
+    await deleteStudent(id);
+    revalidatePath("/staff/students");
+    revalidatePath("/staff/manage-students");
+    return { success: true };
+  } catch {
+    return { success: false, error: "خطأ في حذف الطالب" };
+  }
+}
+
 export async function approveStudentAction(id: string): Promise<ActionResult> {
   const session = await auth();
   if (
@@ -69,11 +88,11 @@ export async function createStudentAction(
   }
 
   const raw = {
-    name: formData.get("name"),
-    email: formData.get("email"),
+    nameAr: formData.get("nameAr"),
+    name: formData.get("name") || "",
+    email: formData.get("email") || "",
     academicId: formData.get("academicId"),
     password: formData.get("password"),
-    nameAr: formData.get("nameAr") || undefined,
     major: formData.get("major") || undefined,
     studentCardNumber: formData.get("studentCardNumber") || undefined,
     graduationYear: formData.get("graduationYear") || undefined,
@@ -83,6 +102,11 @@ export async function createStudentAction(
   if (!parsed.success) {
     const first = parsed.error.issues[0]?.message;
     return { success: false, error: first ?? "بيانات غير صالحة" };
+  }
+
+  // Handle optional email for database requirements
+  if (!parsed.data.email) {
+    parsed.data.email = `${parsed.data.academicId}@grads.system`;
   }
 
   try {
@@ -107,25 +131,28 @@ export async function createStaffUserAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const session = await auth();
-  if (
-    !session?.user?.id ||
-    (session.user.role !== "STAFF" && session.user.role !== "ADMIN")
-  ) {
-    return { success: false, error: "غير مصرح" };
+  // Only ADMIN can create staff accounts now
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
+    return { success: false, error: "غير مصرح - للمسؤولين فقط" };
   }
 
   const raw = {
-    name: formData.get("name"),
-    email: formData.get("email"),
+    nameAr: formData.get("nameAr"),
+    name: formData.get("name") || "",
+    email: formData.get("email") || "",
     academicId: formData.get("academicId"),
     password: formData.get("password"),
-    nameAr: formData.get("nameAr") || undefined,
   };
 
   const parsed = createStaffUserSchema.safeParse(raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0]?.message;
     return { success: false, error: first ?? "بيانات غير صالحة" };
+  }
+
+  // Handle optional email for database requirements
+  if (!parsed.data.email) {
+    parsed.data.email = `${parsed.data.academicId}@grads.system`;
   }
 
   try {

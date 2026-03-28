@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type {
+  CreateStaffUserInput,
   CreateStudentInput,
   UpdateStudentInput,
   UpdateStudentProfileInput,
@@ -39,12 +40,16 @@ export async function getStudentsWithCertSteps(
     name: u.name,
     nameAr: u.nameAr,
     major: u.studentProfile?.major ?? null,
+    studentCardNumber: u.studentProfile?.studentCardNumber ?? null,
+    graduationYear: u.studentProfile?.graduationYear ?? null,
     steps: u.certificateSteps.map((s) => ({
       id: s.id,
       label: s.label,
-      status: stepStatusMap[s.status],
+      status: stepStatusMap[s.status as keyof typeof stepStatusMap],
     })),
     graduationFormSubmitted: !!u.graduationForm,
+    graduationFormStatus: u.graduationForm?.status ?? null,
+    graduationFormId: u.graduationForm?.id ?? null,
     documents: u.documents.map((d) => ({
       id: d.id,
       label: d.label,
@@ -129,8 +134,8 @@ export async function createStudent(
 
   const user = await prisma.user.create({
     data: {
-      name: userData.name,
-      email: userData.email,
+      name: userData.name || null,
+      email: userData.email || `${userData.academicId}@grads.system`,
       academicId: userData.academicId,
       nameAr: userData.nameAr,
       passwordHash,
@@ -247,13 +252,7 @@ export async function getUnapprovedStudents(): Promise<Student[]> {
   }));
 }
 
-export async function createStaffUser(data: {
-  name: string;
-  email: string;
-  academicId: string;
-  password: string;
-  nameAr?: string;
-}): Promise<{
+export async function createStaffUser(data: CreateStaffUserInput): Promise<{
   id: string;
   name: string | null;
   email: string;
@@ -264,10 +263,10 @@ export async function createStaffUser(data: {
 
   const user = await prisma.user.create({
     data: {
-      name: data.name,
-      email: data.email,
+      name: data.name || null,
+      email: data.email || `${data.academicId}@grads.system`,
       academicId: data.academicId,
-      nameAr: data.nameAr ?? null,
+      nameAr: data.nameAr,
       passwordHash,
       role: "STAFF",
       isApproved: true,

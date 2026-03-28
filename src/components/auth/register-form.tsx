@@ -28,9 +28,8 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
-      {/* Name */}
+      {/* Arabic Name (Required) */}
       <div className="flex items-center gap-3 bg-[#FFF3E4] rounded-full px-5 py-4">
-        {/* Pencil icon */}
         <svg
           width="28"
           height="28"
@@ -47,6 +46,34 @@ export default function RegisterForm() {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+        </svg>
+        <input
+          type="text"
+          name="nameAr"
+          placeholder="الاسم الكامل (عربي)"
+          required
+          disabled={isPending}
+          className="flex-1 bg-transparent outline-none text-[#1a3b5cc7] font-semibold text-[18px] placeholder:text-[#1a3b5cc7] placeholder:font-semibold disabled:opacity-60"
+          dir="rtl"
+        />
+      </div>
+      {state.fieldErrors?.nameAr && (
+        <p className="text-red-800 bg-red-100 rounded-2xl px-4 py-2 text-sm text-center font-medium -mt-2">
+          {state.fieldErrors.nameAr}
+        </p>
+      )}
+
+      {/* English Name (Optional) */}
+      <div className="flex items-center gap-3 bg-[#FFF3E4] rounded-full px-5 py-4">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 28 28"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="shrink-0"
+          aria-hidden="true"
+        >
           <path
             d="M16 6l6 6"
             stroke="#1a3b5c"
@@ -57,18 +84,11 @@ export default function RegisterForm() {
         <input
           type="text"
           name="name"
-          placeholder="name"
-          required
+          placeholder="Full Name (English) - Optional"
           disabled={isPending}
           className="flex-1 bg-transparent outline-none text-[#1a3b5cc7] font-semibold text-[18px] placeholder:text-[#1a3b5cc7] placeholder:font-semibold disabled:opacity-60"
-          autoComplete="name"
         />
       </div>
-      {state.fieldErrors?.name && (
-        <p className="text-red-800 bg-red-100 rounded-2xl px-4 py-2 text-sm text-center font-medium -mt-2">
-          {state.fieldErrors.name}
-        </p>
-      )}
 
       {/* Academic ID */}
       <div className="flex items-center gap-3 bg-[#FFF3E4] rounded-full px-5 py-4">

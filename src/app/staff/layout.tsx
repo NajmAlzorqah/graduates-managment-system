@@ -24,7 +24,7 @@ export default async function StaffLayout({
     redirect("/admin");
   }
 
-  const staffName = session.user.name ?? "عضو الفريق";
+  const staffName = session.user.nameAr || session.user.name || "عضو الفريق";
 
   return (
     <div className="flex h-screen bg-[#1a3b5c]">

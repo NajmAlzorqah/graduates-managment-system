@@ -28,7 +28,7 @@ export async function loginAction(
   // Pre-check: distinguish "not approved" from "bad credentials"
   const existing = await prisma.user.findUnique({
     where: { academicId: parsed.data.academicId },
-    select: { isApproved: true, passwordHash: true },
+    select: { isApproved: true, passwordHash: true, role: true },
   });
 
   if (existing) {
@@ -41,12 +41,20 @@ export async function loginAction(
     }
   }
 
+  const roleRedirects: Record<string, string> = {
+    STUDENT: "/student",
+    STAFF: "/staff",
+    ADMIN: "/admin",
+  };
+
+  const redirectTo = existing ? (roleRedirects[existing.role] || "/") : "/";
+
   try {
     await signIn("credentials", {
       academicId: parsed.data.academicId,
       password: parsed.data.password,
       redirect: true,
-      redirectTo: "/",
+      redirectTo,
     });
   } catch (err) {
     // Auth.js throws a NEXT_REDIRECT for successful logins — rethrow it
@@ -81,9 +89,10 @@ export async function registerAction(
   formData: FormData,
 ): Promise<RegisterActionState> {
   const raw = {
-    name: formData.get("name"),
+    nameAr: formData.get("nameAr"),
+    name: formData.get("name") || "",
     academicId: formData.get("academicId"),
-    email: formData.get("email"),
+    email: formData.get("email") || "",
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
   };
@@ -100,10 +109,12 @@ export async function registerAction(
     return { fieldErrors };
   }
 
+  const emailToUse = parsed.data.email || `${parsed.data.academicId}@grads.system`;
+
   const existing = await prisma.user.findFirst({
     where: {
       OR: [
-        { email: parsed.data.email },
+        { email: emailToUse },
         { academicId: parsed.data.academicId },
       ],
     },
@@ -119,8 +130,9 @@ export async function registerAction(
   await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
-        name: parsed.data.name,
-        email: parsed.data.email,
+        nameAr: parsed.data.nameAr,
+        name: parsed.data.name || null,
+        email: emailToUse,
         academicId: parsed.data.academicId,
         passwordHash,
         role: "STUDENT",
