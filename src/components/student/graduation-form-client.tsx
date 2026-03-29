@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { GraduationForm } from "@/types/graduation-form";
@@ -21,16 +22,10 @@ interface GraduationFormClientProps {
     studentCardNumber: string;
     graduationYear: string;
     department: string;
+    phone: string;
   };
   currentForm: GraduationForm | null;
 }
-
-const SPECIALIZATIONS = [
-  "IT",
-  "Computer Science",
-  "Software Engineering",
-  "Information Systems",
-];
 
 export default function GraduationFormClient({
   userId,
@@ -39,14 +34,13 @@ export default function GraduationFormClient({
 }: GraduationFormClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [fullName, setFullName] = useState(profile.nameAr || "");
-  const [passportName, setPassportName] = useState(profile.name || "");
-  const [specialization, setSpecialization] = useState(profile.major || "IT");
+  const [fullNameAr, setFullNameAr] = useState(profile.nameAr || "");
+  const [fullNameEn, setFullNameEn] = useState(profile.name || "");
+  const [countryCode, setCountryCode] = useState("+967");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [passportFile, setPassportFile] = useState<File | null>(null);
-  const [studentCardNumber, setStudentCardNumber] = useState(
-    profile.studentCardNumber || "",
-  );
   const [graduationYear, setGraduationYear] = useState(profile.graduationYear);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isEditing, setIsEditing] = useState(
     !currentForm || currentForm.status === "REJECTED",
   );
@@ -60,19 +54,67 @@ export default function GraduationFormClient({
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setPassportFile(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type (Images only: JPEG, PNG)
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("يرجى اختيار صورة فقط (JPEG, PNG)");
+        e.target.value = ""; // Reset input
+        return;
+      }
+
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(
+          "حجم الملف كبير جداً. يرجى ضغط الصورة لتكون أقل من 5 ميجابايت قبل الرفع.",
+        );
+        e.target.value = ""; // Reset input
+        return;
+      }
+      setPassportFile(file);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Quadruple name and Arabic letters validation
+    const parts = fullNameAr.trim().split(/\s+/).filter(Boolean);
+    if (parts.length !== 4 || !/^[\u0621-\u064A\s]+$/.test(fullNameAr)) {
+      toast.error("الاسم بالعربي يجب أن يكون رباعي وبالحروف العربية فقط");
+      return;
+    }
+
+    // English name validation (English letters only)
+    if (!/^[a-zA-Z\s]+$/.test(fullNameEn)) {
+      toast.error("الاسم الإنجليزي يجب أن يحتوي على حروف إنجليزية فقط");
+      return;
+    }
+
+    // Graduation year validation
+    const year = Number.parseInt(graduationYear, 10);
+    const currentYear = new Date().getFullYear();
+    if (Number.isNaN(year) || year < 1999 || year > currentYear + 1) {
+      toast.error("سنة التخرج يجب أن تكون بين 1999 و السنة الحالية + 1");
+      return;
+    }
+
+    // Phone number validation (exactly 9 digits after codes)
+    if (!/^\d{9}$/.test(phoneNumber)) {
+      toast.error("يجب إدخال 9 أرقام بالضبط لرقم الهاتف");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.error("يجب الموافقة على صحة البيانات");
+      return;
+    }
+
     if (
-      !fullName ||
-      !passportName ||
+      !fullNameAr ||
+      !fullNameEn ||
       (!passportFile && !currentForm) ||
-      !studentCardNumber ||
       !graduationYear
     ) {
       toast.error("يرجى تعبئة جميع الحقول المطلوبة");
@@ -101,11 +143,14 @@ export default function GraduationFormClient({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            fullName,
-            passportName,
-            major: specialization,
+            fullNameAr,
+            fullNameEn,
+            countryCode,
+            phoneNumber,
+            major: profile.major,
             graduationYear: Number.parseInt(graduationYear, 10),
-            studentCardNumber: studentCardNumber,
+            studentCardNumber: profile.studentCardNumber,
+            agreedToTerms,
           }),
         });
 
@@ -155,10 +200,10 @@ export default function GraduationFormClient({
 
           <div className="flex flex-col">
             <p className="text-white font-bold text-lg leading-tight">
-              {fullName || profile.nameAr}
+              {fullNameAr || profile.nameAr}
             </p>
             <p className="text-[#ffb755] font-medium text-sm">
-              {specialization}
+              {profile.major}
             </p>
           </div>
         </div>
@@ -203,64 +248,69 @@ export default function GraduationFormClient({
         >
           <div className="space-y-3">
             <Label className="text-[#1a3b5c] text-xl font-bold mr-2">
-              الاسم الرباعي:
+              اسم الطالب (بالعربي): رباعي كامل كما هو في شهادة الثانوية
             </Label>
             <Input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={fullNameAr}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^\u0621-\u064A\s]/g, "");
+                setFullNameAr(val);
+              }}
               disabled={!isEditing}
               className="h-14 rounded-full border-none bg-white disabled:bg-white/50 text-[#1a3b5c] text-lg px-6 shadow-sm"
-              placeholder="ادخل الاسم الرباعي"
+              placeholder="ادخل الاسم الرباعي بالعربي"
               required
             />
           </div>
 
           <div className="space-y-3">
             <Label className="text-[#1a3b5c] text-xl font-bold mr-2">
-              الاسم كما في جواز السفر :
+              اسم الطالب (بالإنجليزي): يفضل كما في جواز السفر إن وجد
             </Label>
             <Input
-              value={passportName}
-              onChange={(e) => setPassportName(e.target.value)}
+              value={fullNameEn}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                setFullNameEn(val);
+              }}
               disabled={!isEditing}
               className="h-14 rounded-full border-none bg-white disabled:bg-white/50 text-[#1a3b5c] text-lg px-6 shadow-sm"
-              placeholder="ادخل الاسم بالانجليزية"
+              placeholder="Enter name in English"
               required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label className="text-[#1a3b5c] text-xl font-bold mr-2">
-                التخصص:
-              </Label>
-              <div className="relative">
+          <div className="space-y-3">
+            <Label className="text-[#1a3b5c] text-xl font-bold mr-2">
+              رقم الهاتف:
+            </Label>
+            <div
+              className={`flex h-14 w-full items-center rounded-full bg-white shadow-sm overflow-hidden ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+            >
+              <div className="relative h-full shrink-0 border-l border-gray-100">
                 <select
-                  value={specialization}
-                  onChange={(e) => setSpecialization(e.target.value)}
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
                   disabled={!isEditing}
-                  className="w-full h-14 rounded-full border-none bg-white disabled:bg-white/50 text-[#1a3b5c] text-lg px-6 shadow-sm appearance-none outline-none focus:ring-2 focus:ring-[#1a3b5c]/20"
+                  className="h-full bg-transparent pr-10 pl-4 text-[#1a3b5c] text-lg font-bold outline-none appearance-none cursor-pointer"
                 >
-                  {SPECIALIZATIONS.map((spec) => (
-                    <option key={spec} value={spec}>
-                      {spec}
-                    </option>
-                  ))}
+                  <option value="+967">+967</option>
+                  <option value="+966">+966</option>
+                  <option value="+971">+971</option>
                 </select>
-                <ChevronDown className="absolute left-6 top-1/2 -translate-y-1/2 text-[#1a3b5c] w-6 h-6 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1a3b5c] w-5 h-5 pointer-events-none" />
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <Label className="text-[#1a3b5c] text-xl font-bold mr-2">
-                رقم البطاقة الجامعية:
-              </Label>
-              <Input
-                value={studentCardNumber}
-                onChange={(e) => setStudentCardNumber(e.target.value)}
+              <input
+                type="text"
+                value={phoneNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  if (val.length <= 9) setPhoneNumber(val);
+                }}
                 disabled={!isEditing}
-                className="h-14 rounded-full border-none bg-white disabled:bg-white/50 text-[#1a3b5c] text-lg px-6 shadow-sm"
-                placeholder="رقم البطاقة"
+                className="h-full flex-1 bg-transparent px-6 text-[#1a3b5c] text-lg font-bold outline-none placeholder:text-gray-400 placeholder:font-normal"
+                placeholder="ادخل 9 أرقام"
                 required
               />
             </div>
@@ -272,6 +322,8 @@ export default function GraduationFormClient({
             </Label>
             <Input
               type="number"
+              min={1999}
+              max={new Date().getFullYear() + 1}
               value={graduationYear}
               onChange={(e) => setGraduationYear(e.target.value)}
               disabled={!isEditing}
@@ -282,7 +334,7 @@ export default function GraduationFormClient({
 
           <div className="space-y-3">
             <Label className="text-[#1a3b5c] text-xl font-bold mr-2">
-              صورة جواز السفر:
+              ادرج صورة الجواز ان وجد :
             </Label>
             <div
               className={`relative h-14 bg-white rounded-full flex items-center px-6 shadow-sm overflow-hidden ${!isEditing ? "bg-white/50 cursor-not-allowed" : ""}`}
@@ -292,21 +344,37 @@ export default function GraduationFormClient({
                   ? passportFile.name
                   : status !== "DRAFT"
                     ? "مرفوع مسبقاً"
-                    : "upload"}
+                    : "اختيار صورة الجواز"}
               </span>
               <div className="flex items-center gap-2 text-[#1a3b5c]">
                 <Upload className="w-6 h-6" />
-                <span className="text-xl font-bold">upload</span>
+                <span className="text-xl font-bold">رفع</span>
               </div>
               <input
                 type="file"
                 onChange={handleFileChange}
-                accept="image/*,.pdf"
+                accept="image/jpeg,image/png,image/jpg"
                 disabled={!isEditing}
                 className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
                 required={!currentForm}
               />
             </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-4">
+            <Checkbox
+              id="agreed"
+              checked={agreedToTerms}
+              onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+              disabled={!isEditing}
+              className="w-6 h-6 rounded-md bg-white border-none data-[state=checked]:bg-[#1a3b5c]"
+            />
+            <Label
+              htmlFor="agreed"
+              className="text-[#1a3b5c] text-lg font-bold cursor-pointer"
+            >
+              أتحمل صحة البيانات الخاصة بالاسم العربي والإنجليزي
+            </Label>
           </div>
 
           <div className="pt-6 flex flex-col items-center gap-4">
@@ -349,6 +417,45 @@ export default function GraduationFormClient({
             ) : null}
           </div>
         </form>
+
+        {/* Notes Section */}
+        <div className="mt-12 space-y-6 bg-blue-50/50 p-8 rounded-[35px] border border-blue-100">
+          <h2 className="text-[#1a3b5c] text-2xl font-bold flex items-center gap-2">
+            <span className="w-2 h-8 bg-[#ffb755] rounded-full" />
+            ملاحظات هامة:
+          </h2>
+          <ul className="space-y-4">
+            <li className="flex gap-3 text-[#1a3b5c] text-lg leading-relaxed">
+              <span className="w-2 h-2 rounded-full bg-[#ffb755] shrink-0 mt-2.5" />
+              <span>
+                الطلاب الراغبين بإحضار صور شخصية حديثة عدد (6) لوثائق التخرج
+                عليهم بسرعة تسليمها للأرشيف.
+              </span>
+            </li>
+            <li className="flex gap-3 text-[#1a3b5c] text-lg leading-relaxed">
+              <span className="w-2 h-2 rounded-full bg-[#ffb755] shrink-0 mt-2.5" />
+              <span>
+                الطلاب الذين لديهم أخطاء في البيانات الشخصية (الاسم، تاريخ
+                الميلاد، مكان الميلاد) في مؤهل الثانوية سرعة التصحيح لمؤهلات
+                الثانوية.
+              </span>
+            </li>
+            <li className="flex gap-3 text-[#1a3b5c] text-lg leading-relaxed">
+              <span className="w-2 h-2 rounded-full bg-[#ffb755] shrink-0 mt-2.5" />
+              <span>
+                على جميع الطلاب الاطلاع على النتائج والمراجعة حتى لا يكون هناك
+                أخطاء أو نتائج لم يتم إدخالها.
+              </span>
+            </li>
+            <li className="flex gap-3 text-[#1a3b5c] text-lg leading-relaxed font-bold">
+              <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2.5" />
+              <span>
+                تعبئة هذه الاستمارة ضرورية لكل طالب خريج ويتحمل أي طالب مسؤولية
+                عدم تعبئتها.
+              </span>
+            </li>
+          </ul>
+        </div>
       </motion.div>
     </div>
   );

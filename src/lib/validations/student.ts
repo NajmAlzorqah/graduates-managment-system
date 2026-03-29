@@ -20,7 +20,15 @@ export const createStudentSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one digit"),
   major: z.string().min(1, "Major is required"),
   studentCardNumber: z.string().optional(),
-  graduationYear: z.coerce.number().int().min(2000).max(2100).optional(),
+  graduationYear: z.coerce
+    .number()
+    .int()
+    .min(1999, "سنة التخرج يجب أن تكون بين 1999 و السنة الحالية + 1")
+    .max(
+      new Date().getFullYear() + 1,
+      "سنة التخرج يجب أن تكون بين 1999 و السنة الحالية + 1",
+    )
+    .optional(),
 });
 
 export type CreateStudentInput = z.infer<typeof createStudentSchema>;
@@ -59,7 +67,15 @@ export type UpdateStudentInput = z.infer<typeof updateStudentSchema>;
 export const updateStudentProfileSchema = z.object({
   studentCardNumber: z.string().optional(),
   major: z.string().optional(),
-  graduationYear: z.coerce.number().int().min(2000).max(2100).optional(),
+  graduationYear: z.coerce
+    .number()
+    .int()
+    .min(1999, "سنة التخرج يجب أن تكون بين 1999 و السنة الحالية + 1")
+    .max(
+      new Date().getFullYear() + 1,
+      "سنة التخرج يجب أن تكون بين 1999 و السنة الحالية + 1",
+    )
+    .optional(),
 });
 
 export type UpdateStudentProfileInput = z.infer<

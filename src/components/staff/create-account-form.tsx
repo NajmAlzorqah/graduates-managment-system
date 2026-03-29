@@ -182,7 +182,18 @@ export default function CreateAccountForm() {
                 name="graduationYear"
                 type="number"
                 placeholder="مثال: 2026"
-              />
+              >
+                <input
+                  id="graduationYear"
+                  name="graduationYear"
+                  type="number"
+                  min={1999}
+                  max={new Date().getFullYear() + 1}
+                  placeholder="مثال: 2026"
+                  className="h-[52px] w-full rounded-[29px] border-0 bg-white px-5 text-[#1a3b5c] placeholder-[#1a3b5c]/50 shadow-[0_4px_4px_rgba(0,0,0,0.12)] focus:outline-none focus:ring-2 focus:ring-[#1a3b5c]/20 md:text-base"
+                  dir="rtl"
+                />
+              </FormField>
             </div>
           </div>
 

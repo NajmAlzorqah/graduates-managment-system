@@ -63,6 +63,15 @@ export default function NotificationDetailsModal({
   };
 
   const handleSaveChanges = async () => {
+    const year = formData.graduationYear;
+    const currentYear = new Date().getFullYear();
+    if (year < 1999 || year > currentYear + 1) {
+      toast.error("سنة التخرج يجب أن تكون بين 1999 و السنة الحالية + 1", {
+        style: { fontFamily: "Tajawal, sans-serif" },
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
       const res = await updateStudentDataAction(formData);
@@ -269,6 +278,8 @@ export default function NotificationDetailsModal({
                     <input
                       type="number"
                       name="graduationYear"
+                      min={1999}
+                      max={new Date().getFullYear() + 1}
                       value={formData.graduationYear}
                       onChange={handleInputChange}
                       className="w-full bg-white rounded-lg p-3 border-2 border-[#1a3b5c]/20 focus:border-[#ffb755] focus:outline-none transition-colors text-[#1a3b5c] font-medium font-sans"

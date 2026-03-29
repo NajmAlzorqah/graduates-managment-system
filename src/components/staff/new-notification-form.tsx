@@ -152,8 +152,9 @@ export default function NewNotificationForm({
       }
 
       const parsedYear = graduationYear ? parseInt(graduationYear, 10) : null;
-      if (parsedYear !== null && parsedYear < 2000) {
-        toast.error("سنة التخرج يجب أن تكون من 2000 فما فوق");
+      const currentYear = new Date().getFullYear();
+      if (parsedYear !== null && (parsedYear < 1999 || parsedYear > currentYear + 1)) {
+        toast.error("سنة التخرج يجب أن تكون بين 1999 و السنة الحالية + 1");
         return;
       }
 
@@ -397,7 +398,8 @@ export default function NewNotificationForm({
                       <Input
                         placeholder="سنة التخرج"
                         type="number"
-                        min={2000}
+                        min={1999}
+                        max={new Date().getFullYear() + 1}
                         value={graduationYear}
                         onChange={(e) => setGraduationYear(e.target.value)}
                         className="h-12 rounded-[14px] border-0 bg-[#ececec] text-center text-[32px] font-bold text-[#1a3b5c]/65 placeholder:text-[#1a3b5c]/65"

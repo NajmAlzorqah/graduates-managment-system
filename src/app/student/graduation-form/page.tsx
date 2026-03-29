@@ -26,6 +26,7 @@ export default async function GraduationFormPage() {
       user.studentProfile?.graduationYear?.toString() ??
       new Date().getFullYear().toString(),
     department: user.studentProfile?.major ?? "",
+    phone: user.studentProfile?.phone ?? "",
   };
 
   return (

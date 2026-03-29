@@ -44,8 +44,8 @@ export async function submitGraduationForm(
     await tx.user.update({
       where: { id: userId },
       data: {
-        nameAr: data.fullName,
-        name: data.passportName,
+        nameAr: data.fullNameAr,
+        name: data.fullNameEn,
       },
     });
 
@@ -66,18 +66,21 @@ export async function submitGraduationForm(
     });
 
     // Update profile with form data
+    const fullPhone = `${data.countryCode}${data.phoneNumber}`;
     await tx.studentProfile.upsert({
       where: { userId },
       create: {
         userId,
-        major: data.major,
+        major: data.major || "IT",
         graduationYear: data.graduationYear,
-        studentCardNumber: data.studentCardNumber,
+        studentCardNumber: data.studentCardNumber || null,
+        phone: fullPhone,
       },
       update: {
-        major: data.major,
+        major: data.major || "IT",
         graduationYear: data.graduationYear,
-        studentCardNumber: data.studentCardNumber,
+        studentCardNumber: data.studentCardNumber || null,
+        phone: fullPhone,
       },
     });
 
@@ -198,7 +201,7 @@ export async function getAllForms(
   filter?: GraduationFormStatus,
 ): Promise<GraduationForm[]> {
   const forms = await prisma.graduationForm.findMany({
-    where: filter ? { status: filter as any } : undefined,
+    where: filter ? { status: filter } : undefined,
     orderBy: { createdAt: "desc" },
   });
   return forms.map(toGraduationForm);

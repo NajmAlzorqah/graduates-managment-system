@@ -408,6 +408,8 @@ export default function NotificationForm({
                         <Input
                           type="number"
                           placeholder="سنة التخرج"
+                          min={1999}
+                          max={new Date().getFullYear() + 1}
                           value={graduationYear}
                           onChange={(e) => setGraduationYear(e.target.value)}
                           className="h-14 rounded-2xl border-none bg-gray-100 px-4 text-center text-xl font-bold text-[#1D3557]/70"
