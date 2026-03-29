@@ -8,11 +8,18 @@ export default async function GraduationFormPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [form, user] = await Promise.all([
+  const [form, user, passportDoc] = await Promise.all([
     getGraduationForm(session.user.id),
     prisma.user.findUniqueOrThrow({
       where: { id: session.user.id },
       include: { studentProfile: true },
+    }),
+    prisma.document.findFirst({
+      where: {
+        userId: session.user.id,
+        documentType: "PASSPORT",
+      },
+      orderBy: { createdAt: "desc" },
     }),
   ]);
 
@@ -34,6 +41,15 @@ export default async function GraduationFormPage() {
       userId={session.user.id}
       profile={profile}
       currentForm={form}
+      passportDoc={
+        passportDoc
+          ? {
+              id: passportDoc.id,
+              filePath: passportDoc.filePath,
+              status: passportDoc.status,
+            }
+          : null
+      }
     />
   );
 }

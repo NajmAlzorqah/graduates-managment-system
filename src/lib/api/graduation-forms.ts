@@ -40,14 +40,41 @@ export async function submitGraduationForm(
   data: SubmitGraduationFormInput,
 ): Promise<GraduationForm> {
   const form = await prisma.$transaction(async (tx) => {
+    // Get current form to check for re-submission
+    const currentForm = await tx.graduationForm.findUnique({
+      where: { userId },
+    });
+
+    const isResubmission =
+      currentForm &&
+      (currentForm.status === "NEEDS_CONFIRMATION" ||
+        currentForm.status === "REJECTED");
+
     // Update user names
-    await tx.user.update({
+    const user = await tx.user.update({
       where: { id: userId },
       data: {
         nameAr: data.fullNameAr,
         name: data.fullNameEn,
       },
     });
+
+    // Send notification to staff if it's a re-submission
+    if (isResubmission) {
+      const staffUsers = await tx.user.findMany({
+        where: { role: { in: ["STAFF", "ADMIN"] } },
+      });
+
+      for (const staff of staffUsers) {
+        await tx.notification.create({
+          data: {
+            userId: staff.id,
+            title: "تعديل في نموذج التخرج",
+            message: `قام الطالب ${user.nameAr} بتعديل بيانات الاستمارة وإعادة إرسالها للمراجعة.`,
+          },
+        });
+      }
+    }
 
     // Upsert the graduation form
     const gf = await tx.graduationForm.upsert({
@@ -95,6 +122,31 @@ export async function submitGraduationForm(
       },
     });
 
+    // Reset Step 2 to PENDING if student edited/submitted the form
+    await tx.certificateStep.updateMany({
+      where: {
+        userId,
+        order: 2,
+      },
+      data: {
+        status: "PENDING",
+      },
+    });
+
+    // Disable previous correction notifications
+    await tx.notification.updateMany({
+      where: {
+        userId,
+        status: "نشط",
+        title: {
+          in: ["مراجعة وتأكيد البيانات", "يوجد أخطاء في نموذج التخرج"],
+        },
+      },
+      data: {
+        status: "مستخدم",
+      },
+    });
+
     return gf;
   });
 
@@ -125,22 +177,39 @@ export async function reviewGraduationForm(
       title = "يرجى تأكيد بياناتك";
       message =
         "قام الموظف بمراجعة طلبك، يرجى التأكد من صحة البيانات وتأكيدها.";
+
+      // Mark Step 2 as IN_PROGRESS
+      await tx.certificateStep.updateMany({
+        where: { userId: studentId, order: 2 },
+        data: { status: "IN_PROGRESS" },
+      });
     } else if (status === "REJECTED") {
       title = "يوجد أخطاء في نموذج التخرج";
       message = comments || "يرجى مراجعة وتصحيح البيانات في نموذج التخرج.";
 
-      // Reset Step 1 if rejected?
+      // Reset Step 1 and Step 2 if rejected
       await tx.certificateStep.updateMany({
-        where: { userId: studentId, order: 1 },
+        where: { userId: studentId, order: { in: [1, 2] } },
         data: { status: "PENDING" },
+      });
+
+      // Also mark passport as rejected if it exists
+      await tx.document.updateMany({
+        where: { userId: studentId, documentType: "PASSPORT" },
+        data: {
+          status: "REJECTED",
+          rejectionReason: comments || "يرجى إعادة رفع صورة واضحة للجواز.",
+          reviewedById: staffId,
+          reviewedAt: new Date(),
+        },
       });
     } else if (status === "APPROVED") {
       title = "تم اعتماد نموذج التخرج";
       message = "تم اعتماد نموذج التخرج الخاص بك بنجاح.";
 
-      // Complete Step 1 and Step 2 if approved directly
+      // Complete Step 1, Step 2, and Step 3 if approved
       await tx.certificateStep.updateMany({
-        where: { userId: studentId, order: { in: [1, 2] } },
+        where: { userId: studentId, order: { in: [1, 2, 3] } },
         data: { status: "COMPLETED" },
       });
     }
@@ -167,9 +236,26 @@ export async function confirmGraduationForm(
     const gf = await tx.graduationForm.update({
       where: { userId },
       data: {
-        status: "APPROVED",
+        status: "CONFIRMED_BY_STUDENT",
       },
     });
+
+    const user = await tx.user.findUnique({ where: { id: userId } });
+
+    // Send notification to staff
+    const staffUsers = await tx.user.findMany({
+      where: { role: { in: ["STAFF", "ADMIN"] } },
+    });
+
+    for (const staff of staffUsers) {
+      await tx.notification.create({
+        data: {
+          userId: staff.id,
+          title: "تأكيد بيانات الطالب",
+          message: `قام الطالب ${user?.nameAr} بتأكيد صحة البيانات، يرجى الاعتماد النهائي.`,
+        },
+      });
+    }
 
     // Update Step 2 (Review and confirm) to COMPLETED
     await tx.certificateStep.updateMany({
@@ -182,12 +268,35 @@ export async function confirmGraduationForm(
       },
     });
 
-    // Send confirmation notification
+    // Mark Step 3 (Approve graduation) as IN_PROGRESS
+    await tx.certificateStep.updateMany({
+      where: {
+        userId,
+        order: 3,
+      },
+      data: {
+        status: "IN_PROGRESS",
+      },
+    });
+
+    // Disable confirmation notification
+    await tx.notification.updateMany({
+      where: {
+        userId,
+        status: "نشط",
+        title: "يرجى تأكيد بياناتك",
+      },
+      data: {
+        status: "مستخدم",
+      },
+    });
+
+    // Send confirmation notification to student
     await tx.notification.create({
       data: {
         userId,
         title: "تم تأكيد طلبك بنجاح",
-        message: "لقد قمت بتأكيد بياناتك، وسيتم البدء في إجراءات الشهادة.",
+        message: "لقد قمت بتأكيد بياناتك، وسيتم مراجعتها واعتمادها من قبل الموظف المختص.",
       },
     });
 

@@ -1,7 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, ChevronDown, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ChevronDown,
+  ExternalLink,
+  FileText,
+  Upload,
+} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -25,19 +33,35 @@ interface GraduationFormClientProps {
     phone: string;
   };
   currentForm: GraduationForm | null;
+  passportDoc?: {
+    id: string;
+    filePath: string;
+    status: string;
+  } | null;
 }
 
 export default function GraduationFormClient({
   userId,
   profile,
   currentForm,
+  passportDoc,
 }: GraduationFormClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [fullNameAr, setFullNameAr] = useState(profile.nameAr || "");
   const [fullNameEn, setFullNameEn] = useState(profile.name || "");
-  const [countryCode, setCountryCode] = useState("+967");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [countryCode, setCountryCode] = useState(() => {
+    if (profile.phone?.startsWith("+967")) return "+967";
+    if (profile.phone?.startsWith("+966")) return "+966";
+    if (profile.phone?.startsWith("+971")) return "+971";
+    return "+967";
+  });
+  const [phoneNumber, setPhoneNumber] = useState(() => {
+    if (profile.phone?.startsWith("+967")) return profile.phone.slice(4);
+    if (profile.phone?.startsWith("+966")) return profile.phone.slice(4);
+    if (profile.phone?.startsWith("+971")) return profile.phone.slice(4);
+    return profile.phone || "";
+  });
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [graduationYear, setGraduationYear] = useState(profile.graduationYear);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -47,11 +71,8 @@ export default function GraduationFormClient({
 
   const status = currentForm?.status || "DRAFT";
 
-  // If rejected, redirect back to home so they can start over
-  if (status === "REJECTED") {
-    router.replace("/student");
-    return null;
-  }
+  // Note: if status === "REJECTED", isEditing is true above, so form is editable.
+  // We removed the redirection that was here before.
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -225,20 +246,24 @@ export default function GraduationFormClient({
           <h1 className="text-[#1a3b5c] text-3xl font-bold mb-4">
             {status === "APPROVED"
               ? "تم اعتماد النموذج"
-              : status === "SUBMITTED"
+              : status === "SUBMITTED" || status === "CONFIRMED_BY_STUDENT"
                 ? "النموذج قيد المراجعة"
                 : status === "NEEDS_CONFIRMATION"
                   ? "يرجى تأكيد بياناتك"
-                  : "تعبئة استمارة التخرج"}
+                  : status === "REJECTED"
+                    ? "يوجد أخطاء في النموذج"
+                    : "تعبئة استمارة التخرج"}
           </h1>
           <p className="text-[#1a3b5c] text-xl font-medium leading-relaxed">
             {status === "APPROVED"
               ? "لقد قمت بتأكيد جميع بياناتك بنجاح"
-              : status === "SUBMITTED"
+              : status === "SUBMITTED" || status === "CONFIRMED_BY_STUDENT"
                 ? "سنقوم بمراجعة بياناتك وإخبارك بالنتيجة"
                 : status === "NEEDS_CONFIRMATION"
                   ? "تأكد من صحة البيانات أدناه ثم اضغط تأكيد"
-                  : "أولا قم بتعبئة الاستمارة لتتمكن من تتبع شهادتك"}
+                  : status === "REJECTED"
+                    ? "يرجى تصحيح الأخطاء وإعادة إرسال النموذج"
+                    : "أولا قم بتعبئة الاستمارة لتتمكن من تتبع شهادتك"}
           </p>
         </div>
 
@@ -336,15 +361,58 @@ export default function GraduationFormClient({
             <Label className="text-[#1a3b5c] text-xl font-bold mr-2">
               ادرج صورة الجواز ان وجد :
             </Label>
+            
+            {/* Image Preview for existing or newly selected passport */}
+            {(passportFile || passportDoc) && (
+              <div className="relative w-full aspect-[16/9] mb-4 overflow-hidden rounded-[25px] border-2 border-[#1a3b5c]/20 bg-white/50 flex items-center justify-center">
+                <Image
+                  src={
+                    passportFile
+                      ? URL.createObjectURL(passportFile)
+                      : `/api/${passportDoc?.filePath}`
+                  }
+                  alt="Passport Preview"
+                  fill
+                  className="object-contain"
+                />
+                <div className="absolute inset-0 bg-black/10 hover:bg-black/0 transition-colors" />
+                {passportDoc && !passportFile && (
+                  <div className="absolute top-4 right-4 bg-[#1a3b5c]/80 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    <span>مرفوع مسبقاً</span>
+                  </div>
+                )}
+                {passportFile && (
+                  <div className="absolute top-4 right-4 bg-green-500/80 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>ملف جديد</span>
+                  </div>
+                )}
+                {passportDoc && !passportFile && (
+                  <a
+                    href={`/api/${passportDoc.filePath}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="absolute bottom-4 right-4 bg-white text-[#1a3b5c] px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-transform"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>فتح بالحجم الكامل</span>
+                  </a>
+                )}
+              </div>
+            )}
+
             <div
               className={`relative h-14 bg-white rounded-full flex items-center px-6 shadow-sm overflow-hidden ${!isEditing ? "bg-white/50 cursor-not-allowed" : ""}`}
             >
               <span className="flex-1 text-gray-400 text-lg truncate ml-4">
                 {passportFile
                   ? passportFile.name
-                  : status !== "DRAFT"
-                    ? "مرفوع مسبقاً"
-                    : "اختيار صورة الجواز"}
+                  : status === "REJECTED"
+                    ? "يرجى إعادة الرفع"
+                    : status !== "DRAFT"
+                      ? "مرفوع مسبقاً"
+                      : "اختيار صورة الجواز"}
               </span>
               <div className="flex items-center gap-2 text-[#1a3b5c]">
                 <Upload className="w-6 h-6" />
@@ -356,7 +424,7 @@ export default function GraduationFormClient({
                 accept="image/jpeg,image/png,image/jpg"
                 disabled={!isEditing}
                 className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                required={!currentForm}
+                required={!currentForm && !passportDoc}
               />
             </div>
           </div>
@@ -405,7 +473,7 @@ export default function GraduationFormClient({
                   تعديل
                 </Button>
               </div>
-            ) : status === "SUBMITTED" ? (
+            ) : status === "SUBMITTED" || status === "CONFIRMED_BY_STUDENT" ? (
               <div className="text-[#1a3b5c] font-bold text-xl bg-white/20 px-8 py-4 rounded-2xl">
                 بانتظار مراجعة الموظف...
               </div>

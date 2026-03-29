@@ -3,6 +3,7 @@ export type GraduationFormStatus =
   | "SUBMITTED"
   | "UNDER_REVIEW"
   | "NEEDS_CONFIRMATION"
+  | "CONFIRMED_BY_STUDENT"
   | "APPROVED"
   | "REJECTED";
 

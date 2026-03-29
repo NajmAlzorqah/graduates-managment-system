@@ -62,6 +62,7 @@ export type StudentWithSteps = {
   name: string | null;
   nameAr: string | null;
   major: string | null;
+  phone?: string | null;
   studentCardNumber?: string | null;
   graduationYear?: number | null;
   steps: CertificateStep[];

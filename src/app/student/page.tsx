@@ -31,7 +31,7 @@ export default async function StudentHomePage() {
     session.user.id,
   );
 
-  if (!form || form.status === "DRAFT") {
+  if (!form || form.status === "DRAFT" || form.status === "REJECTED") {
     // Show the first login screen for students needing to submit their form
     return (
       <FirstLoginScreen

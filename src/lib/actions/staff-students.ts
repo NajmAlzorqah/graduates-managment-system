@@ -217,14 +217,37 @@ export async function updateStepStatusAction(
       nextStatus === "COMPLETED" &&
       step.status !== "MODIFIED"
     ) {
-      const student = await getStudentById(step.userId);
+      const student = await prisma.user.findUnique({
+        where: { id: step.userId },
+        include: {
+          studentProfile: true,
+          graduationForm: true,
+        },
+      });
+
       if (student) {
+        if (!student.graduationForm || student.graduationForm.status === "DRAFT") {
+          await createNotification(
+            session.user.id,
+            step.userId,
+            "تنبيه: نموذج التخرج ناقص",
+            "يرجى إكمال نموذج التخرج قبل التأكيد.",
+          );
+          return { success: false, error: "يرجى إكمال نموذج التخرج قبل التأكيد." };
+        }
+
+        const passportDoc = await prisma.document.findFirst({
+          where: { userId: step.userId, documentType: "PASSPORT" },
+          orderBy: { createdAt: "desc" },
+        });
+
         const dataMessage = `يرجى مراجعة بياناتك التالية وتأكيدها:
 الاسم بالعربي: ${student.nameAr || "—"}
 الاسم بالإنجليزي: ${student.name || "—"}
-التخصص: ${student.profile?.major || "—"}
-رقم البطاقة الجامعية: ${student.profile?.studentCardNumber || "—"}
-سنة التخرج: ${student.profile?.graduationYear || "—"}`;
+رقم الهاتف: ${student.studentProfile?.phone || "—"}
+التخصص: ${student.studentProfile?.major || "—"}
+سنة التخرج: ${student.studentProfile?.graduationYear || "—"}
+صورة الجواز: ${passportDoc ? "مرفوعة" : "غير مرفوعة"}`;
 
         // Send notification to student with their form data
         await createNotification(

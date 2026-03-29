@@ -55,6 +55,8 @@ export async function GET(_request: Request, { params }: Params) {
       headers: {
         "Content-Type": mimeType,
         "Content-Length": String(buffer.byteLength),
+        "Content-Disposition": `inline; filename="${relativePath.split("/").pop()}"`,
+        "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
   } catch {

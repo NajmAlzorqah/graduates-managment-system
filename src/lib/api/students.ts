@@ -30,7 +30,7 @@ export async function getStudentsWithCertSteps(
       studentProfile: true,
       graduationForm: true,
       certificateSteps: { orderBy: { order: "asc" } },
-      documents: true,
+      documents: { orderBy: { createdAt: "desc" } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -40,6 +40,7 @@ export async function getStudentsWithCertSteps(
     name: u.name,
     nameAr: u.nameAr,
     major: u.studentProfile?.major ?? null,
+    phone: u.studentProfile?.phone ?? null,
     studentCardNumber: u.studentProfile?.studentCardNumber ?? null,
     graduationYear: u.studentProfile?.graduationYear ?? null,
     steps: u.certificateSteps.map((s) => ({

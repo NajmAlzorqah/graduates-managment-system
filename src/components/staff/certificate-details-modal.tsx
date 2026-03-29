@@ -36,7 +36,9 @@ export default function CertificateDetailsModal({
     (d) => d.documentType === "PASSPORT",
   );
 
-  const handleReview = async (status: "NEEDS_CONFIRMATION" | "REJECTED") => {
+  const handleReview = async (
+    status: "APPROVED" | "NEEDS_CONFIRMATION" | "REJECTED",
+  ) => {
     if (status === "REJECTED" && !comments.trim()) {
       toast.error("يرجى إدخال سبب الرفض");
       return;
@@ -60,7 +62,11 @@ export default function CertificateDetailsModal({
 
       if (!res.ok) throw new Error("فشل في تحديث حالة النموذج");
 
-      toast.success("تم تحديث حالة النموذج بنجاح");
+      toast.success(
+        status === "APPROVED"
+          ? "تم اعتماد النموذج بنجاح"
+          : "تم تحديث حالة النموذج بنجاح",
+      );
       onClose();
       window.location.reload();
     } catch (error) {
@@ -96,83 +102,103 @@ export default function CertificateDetailsModal({
 
             <div className="p-8 overflow-y-auto custom-scrollbar">
               {/* Review Action Section */}
-              {student.graduationFormStatus === "SUBMITTED" && (
-                <div
-                  className="bg-white rounded-[30px] p-6 shadow-sm border-2 border-[#ffb755] mb-8"
-                  dir="rtl"
-                >
-                  <h3 className="text-xl font-bold text-[#1a3b5c] mb-4 flex items-center gap-2">
-                    <CheckCircle2 className="w-6 h-6 text-[#ffb755]" />
-                    مراجعة نموذج التخرج
-                  </h3>
-                  <p className="text-[#1a3b5c]/70 font-bold mb-6">
-                    يرجى مراجعة البيانات أدناه والتحقق من صحتها قبل الاعتماد.
-                  </p>
+              {student.graduationFormSubmitted &&
+                ["SUBMITTED", "NEEDS_CONFIRMATION", "CONFIRMED_BY_STUDENT", "REJECTED"].includes(
+                  student.graduationFormStatus || "",
+                ) && (
+                  <div
+                    className="bg-white rounded-[30px] p-6 shadow-sm border-2 border-[#ffb755] mb-8"
+                    dir="rtl"
+                  >
+                    <h3 className="text-xl font-bold text-[#1a3b5c] mb-4 flex items-center gap-2">
+                      <CheckCircle2 className="w-6 h-6 text-[#ffb755]" />
+                      مراجعة نموذج التخرج
+                    </h3>
+                    <p className="text-[#1a3b5c]/70 font-bold mb-6">
+                      {student.graduationFormStatus === "CONFIRMED_BY_STUDENT"
+                        ? "قام الطالب بتأكيد البيانات. يمكنك الآن الاعتماد النهائي أو طلب تأكيد إضافي."
+                        : "يرجى مراجعة البيانات أدناه والتحقق من صحتها قبل الاعتماد."}
+                    </p>
 
-                  {showRejectForm ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="space-y-4"
-                    >
-                      <textarea
-                        value={comments}
-                        onChange={(e) => setComments(e.target.value)}
-                        placeholder="يرجى كتابة أسباب الرفض أو الملاحظات..."
-                        className="w-full bg-[#f3f4f6] rounded-2xl p-4 border-none focus:ring-2 focus:ring-[#ffb755] font-bold text-[#1a3b5c] h-32 resize-none"
-                      />
-                      <div className="flex gap-4">
+                    {showRejectForm ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-4"
+                      >
+                        <textarea
+                          value={comments}
+                          onChange={(e) => setComments(e.target.value)}
+                          placeholder="يرجى كتابة أسباب الرفض أو الملاحظات..."
+                          className="w-full bg-[#f3f4f6] rounded-2xl p-4 border-none focus:ring-2 focus:ring-[#ffb755] font-bold text-[#1a3b5c] h-32 resize-none"
+                        />
+                        <div className="flex gap-4">
+                          <button
+                            type="button"
+                            onClick={() => handleReview("REJECTED")}
+                            disabled={isReviewing}
+                            className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-all flex items-center justify-center gap-2"
+                          >
+                            {isReviewing ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              "تأكيد الرفض وإرسال ملاحظات"
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowRejectForm(false)}
+                            className="px-8 bg-gray-200 text-[#1a3b5c] font-bold py-3 rounded-xl hover:bg-gray-300 transition-all"
+                          >
+                            إلغاء
+                          </button>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <div className="flex flex-wrap gap-4">
                         <button
                           type="button"
-                          onClick={() => handleReview("REJECTED")}
+                          onClick={() => handleReview("APPROVED")}
                           disabled={isReviewing}
-                          className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-all flex items-center justify-center gap-2"
+                          className="flex-1 min-w-[150px] bg-green-600 text-white font-bold py-4 rounded-2xl hover:bg-green-700 transition-all shadow-lg flex items-center justify-center gap-3"
                         >
                           {isReviewing ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <Loader2 className="w-6 h-6 animate-spin" />
                           ) : (
-                            "تأكيد الرفض وإرسال ملاحظات"
+                            <>
+                              <ThumbsUp className="w-6 h-6" />
+                              <span>اعتماد نهائي</span>
+                            </>
                           )}
                         </button>
                         <button
                           type="button"
-                          onClick={() => setShowRejectForm(false)}
-                          className="px-8 bg-gray-200 text-[#1a3b5c] font-bold py-3 rounded-xl hover:bg-gray-300 transition-all"
+                          onClick={() => handleReview("NEEDS_CONFIRMATION")}
+                          disabled={isReviewing}
+                          className="flex-1 min-w-[150px] bg-[#1a3b5c] text-white font-bold py-4 rounded-2xl hover:bg-[#1a3b5c]/90 transition-all shadow-lg flex items-center justify-center gap-3"
                         >
-                          إلغاء
+                          {isReviewing ? (
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                          ) : (
+                            <>
+                              <Circle className="w-6 h-6" />
+                              <span>طلب تأكيد الطالب</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowRejectForm(true)}
+                          disabled={isReviewing}
+                          className="flex-1 min-w-[150px] bg-white text-red-500 border-2 border-red-500 font-bold py-4 rounded-2xl hover:bg-red-50 transition-all flex items-center justify-center gap-3"
+                        >
+                          <ThumbsDown className="w-6 h-6" />
+                          <span>رفض (يوجد أخطاء)</span>
                         </button>
                       </div>
-                    </motion.div>
-                  ) : (
-                    <div className="flex flex-wrap gap-4">
-                      <button
-                        type="button"
-                        onClick={() => handleReview("NEEDS_CONFIRMATION")}
-                        disabled={isReviewing}
-                        className="flex-1 min-w-[200px] bg-[#1a3b5c] text-white font-bold py-4 rounded-2xl hover:bg-[#1a3b5c]/90 transition-all shadow-lg flex items-center justify-center gap-3"
-                      >
-                        {isReviewing ? (
-                          <Loader2 className="w-6 h-6 animate-spin" />
-                        ) : (
-                          <>
-                            <ThumbsUp className="w-6 h-6" />
-                            <span>قبول (طلب تأكيد الطالب)</span>
-                          </>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowRejectForm(true)}
-                        disabled={isReviewing}
-                        className="flex-1 min-w-[200px] bg-white text-red-500 border-2 border-red-500 font-bold py-4 rounded-2xl hover:bg-red-50 transition-all flex items-center justify-center gap-3"
-                      >
-                        <ThumbsDown className="w-6 h-6" />
-                        <span>رفض (يوجد أخطاء)</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
 
               {/* Student Basic Info Section */}
               <div
@@ -192,48 +218,48 @@ export default function CertificateDetailsModal({
                   </div>
 
                   <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-[#1a3b5c]/50 font-bold">
-                        الاسم بالعربي (حسب شهادة الثانوية)
-                      </p>
-                      <p className="text-xl font-bold text-[#1a3b5c]">
-                        {student.nameAr || "غير متوفر"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-[#1a3b5c]/50 font-bold">
-                        الاسم بالإنجليزي (حسب الجواز)
-                      </p>
-                      <p className="text-xl font-bold text-[#1a3b5c]">
-                        {student.name || "غير متوفر"}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-[#1a3b5c]/50 font-bold">
-                          التخصص
-                        </p>
-                        <p className="text-xl font-bold text-[#1a3b5c]">
-                          {student.major}
+                    {!student.graduationFormSubmitted ? (
+                      <div className="py-8 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                        <p className="text-[#1a3b5c] font-bold text-xl">
+                          الطالب لم يكمل نموذج التخرج
                         </p>
                       </div>
-                      <div>
-                        <p className="text-sm text-[#1a3b5c]/50 font-bold">
-                          رقم البطاقة
-                        </p>
-                        <p className="text-xl font-bold text-[#1a3b5c]">
-                          {student.studentCardNumber || "---"}
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-[#1a3b5c]/50 font-bold">
-                        سنة التخرج
-                      </p>
-                      <p className="text-xl font-bold text-[#1a3b5c]">
-                        {student.graduationYear || "---"}
-                      </p>
-                    </div>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="text-sm text-[#1a3b5c]/50 font-bold">
+                            الاسم بالعربي (حسب شهادة الثانوية)
+                          </p>
+                          <p className="text-xl font-bold text-[#1a3b5c]">
+                            {student.nameAr || "غير متوفر"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-[#1a3b5c]/50 font-bold">
+                            الاسم بالإنجليزي (حسب الجواز)
+                          </p>
+                          <p className="text-xl font-bold text-[#1a3b5c]">
+                            {student.name || "غير متوفر"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-[#1a3b5c]/50 font-bold">
+                            رقم الهاتف
+                          </p>
+                          <p className="text-xl font-bold text-[#1a3b5c]" dir="ltr">
+                            {student.phone || "---"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-[#1a3b5c]/50 font-bold">
+                            سنة التخرج
+                          </p>
+                          <p className="text-xl font-bold text-[#1a3b5c]">
+                            {student.graduationYear || "---"}
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -252,14 +278,14 @@ export default function CertificateDetailsModal({
                   {passportDoc ? (
                     <div className="relative group overflow-hidden rounded-2xl border-2 border-[#f0f0f0] aspect-video flex items-center justify-center bg-[#f9f9f9]">
                       <Image
-                        src={`/${passportDoc.filePath}`}
+                        src={`/api/${passportDoc.filePath}`}
                         alt="Passport Copy"
                         fill
                         className="object-contain"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <a
-                          href={`/${passportDoc.filePath}`}
+                          href={`/api/${passportDoc.filePath}`}
                           target="_blank"
                           rel="noreferrer"
                           className="bg-white text-[#1a3b5c] px-4 py-2 rounded-full font-bold flex items-center gap-2"

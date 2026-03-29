@@ -15,6 +15,7 @@ export async function getNotifications(
     title: n.title,
     message: n.message,
     isRead: n.isRead,
+    status: n.status,
     sentById: n.sentById,
     createdAt: n.createdAt,
   }));
@@ -167,6 +168,7 @@ export async function createNotification(
     title: n.title,
     message: n.message,
     isRead: n.isRead,
+    status: n.status,
     sentById: n.sentById,
     createdAt: n.createdAt,
   };

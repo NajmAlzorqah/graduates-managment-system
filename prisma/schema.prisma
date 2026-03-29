@@ -154,6 +154,7 @@ model Notification {
   title     String
   message   String
   isRead    Boolean  @default(false)
+  status    String   @default("نشط")
   sentById  String?
   createdAt DateTime @default(now())
   sentBy    User?    @relation("NotificationSender", fields: [sentById], references: [id])
@@ -201,6 +202,7 @@ enum GraduationFormStatus {
   SUBMITTED
   UNDER_REVIEW
   NEEDS_CONFIRMATION
+  CONFIRMED_BY_STUDENT
   APPROVED
   REJECTED
 }

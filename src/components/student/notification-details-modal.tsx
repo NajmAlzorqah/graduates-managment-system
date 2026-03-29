@@ -170,7 +170,12 @@ export default function NotificationDetailsModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative">
-            <div className="absolute top-4 left-4">
+            <div className="absolute top-4 left-4 flex gap-2">
+              {notification.status === "مستخدم" && (
+                <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-100">
+                  مستخدم
+                </span>
+              )}
               <span className="bg-blue-50 text-[#1a3b5c] px-3 py-1 rounded-full text-xs font-bold">
                 إشعار
               </span>
@@ -292,7 +297,7 @@ export default function NotificationDetailsModal({
                 <label className="block font-arabic font-semibold text-[#1a3b5c] text-lg mb-3">
                   صورة جواز السفر:
                 </label>
-                <div className="w-fit bg-blue-50 text-[#1a3b5c] font-arabic font-medium px-6 py-2.5 rounded-full cursor-pointer hover:bg-blue-100 transition-colors flex items-center gap-2">
+                <div className="w-fit bg-blue-50 text-[#1a3b5c] font-arabic font-medium px-6 py-2.5 rounded-full cursor-not-allowed opacity-50 flex items-center gap-2">
                   <svg
                     width="20"
                     height="20"
@@ -307,7 +312,7 @@ export default function NotificationDetailsModal({
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                   </svg>
-                  <span>عرض المرفق</span>
+                  <span>مرفوع مسبقاً</span>
                 </div>
               </div>
             </div>
@@ -317,7 +322,11 @@ export default function NotificationDetailsModal({
         {/* Footer Actions */}
         {isFormNotification && !isConfirming && (
           <div className="p-5 bg-white border-t border-gray-100 flex gap-4 shrink-0">
-            {isEditing ? (
+            {notification.status === "مستخدم" ? (
+              <div className="w-full text-center py-3 px-4 bg-gray-100 rounded-xl text-gray-500 font-arabic font-bold text-lg border border-gray-200">
+                هذا الإشعار تم استخدامه مسبقاً ولا يمكن استخدامه مرة أخرى.
+              </div>
+            ) : isEditing ? (
               <>
                 <button
                   onClick={() => setIsEditing(false)}

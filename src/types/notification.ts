@@ -4,6 +4,7 @@ export type Notification = {
   title: string;
   message: string;
   isRead: boolean;
+  status: string;
   sentById: string | null;
   createdAt: Date;
 };
