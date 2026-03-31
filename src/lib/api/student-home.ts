@@ -7,7 +7,9 @@ export async function getStudentHomeData(
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     include: {
-      studentProfile: true,
+      studentProfile: {
+        include: { majorRelation: true },
+      },
       certificateSteps: { orderBy: { order: "asc" } },
       documents: { orderBy: { createdAt: "desc" } },
     },
@@ -32,7 +34,7 @@ export async function getStudentHomeData(
     profile: {
       id: user.id,
       nameAr: user.nameAr ?? user.name ?? "",
-      department: user.studentProfile?.major ?? "",
+      department: user.studentProfile?.majorRelation?.name ?? user.studentProfile?.major ?? "",
       avatarUrl: user.image,
     },
     certificateSteps: user.certificateSteps.map((s) => ({

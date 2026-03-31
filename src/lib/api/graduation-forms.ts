@@ -98,13 +98,13 @@ export async function submitGraduationForm(
       where: { userId },
       create: {
         userId,
-        major: data.major || "IT",
+        major: data.major || null,
         graduationYear: data.graduationYear,
         studentCardNumber: data.studentCardNumber || null,
         phone: fullPhone,
       },
       update: {
-        major: data.major || "IT",
+        major: data.major || null,
         graduationYear: data.graduationYear,
         studentCardNumber: data.studentCardNumber || null,
         phone: fullPhone,

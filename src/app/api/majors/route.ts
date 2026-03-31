@@ -36,9 +36,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(major);
   } catch (error: any) {
+    console.error("Error creating major:", error);
     if (error.code === "P2002") {
       return new NextResponse("Major already exists", { status: 400 });
     }
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return new NextResponse(error.message || "Internal Server Error", { status: 500 });
   }
 }

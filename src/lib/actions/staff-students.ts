@@ -220,7 +220,9 @@ export async function updateStepStatusAction(
       const student = await prisma.user.findUnique({
         where: { id: step.userId },
         include: {
-          studentProfile: true,
+          studentProfile: {
+            include: { majorRelation: true },
+          },
           graduationForm: true,
         },
       });
@@ -245,7 +247,7 @@ export async function updateStepStatusAction(
 الاسم بالعربي: ${student.nameAr || "—"}
 الاسم بالإنجليزي: ${student.name || "—"}
 رقم الهاتف: ${student.studentProfile?.phone || "—"}
-التخصص: ${student.studentProfile?.major || "—"}
+التخصص: ${student.studentProfile?.majorRelation?.name ?? student.studentProfile?.major ?? "—"}
 سنة التخرج: ${student.studentProfile?.graduationYear || "—"}
 صورة الجواز: ${passportDoc ? "مرفوعة" : "غير مرفوعة"}`;
 

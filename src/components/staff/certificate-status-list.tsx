@@ -1,12 +1,13 @@
 "use client";
 
 import type { NotificationTemplate } from "@prisma/client";
-import { Search, SlidersHorizontal } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Search, SlidersHorizontal, Settings2 } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
 import type { StudentWithSteps } from "@/types/student";
 import CertificateDetailsModal from "./certificate-details-modal";
 import CertificateStatusCard from "./certificate-status-card";
 import UpdateStatusModal from "./update-status-modal";
+import ManageMajorsModal from "./manage-majors-modal";
 
 type Props = {
   students: StudentWithSteps[];
@@ -19,13 +20,26 @@ export default function CertificateStatusList({ students, templates }: Props) {
     useState<StudentWithSteps | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isMajorsModalOpen, setIsMajorsModalOpen] = useState(false);
   const [filterMajor, setFilterMajor] = useState<string | null>(null);
-  const [filterStatus, _setFilterStatus] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [availableMajors, setAvailableMajors] = useState<string[]>([]);
 
-  const majors = useMemo(() => {
-    const allMajors = students.map((s) => s.major).filter(Boolean) as string[];
-    return Array.from(new Set(allMajors));
-  }, [students]);
+  const fetchMajors = async () => {
+    try {
+      const res = await fetch("/api/majors");
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableMajors(data.map((m: any) => m.name));
+      }
+    } catch (error) {
+      console.error("Failed to fetch majors:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMajors();
+  }, []);
 
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
@@ -59,11 +73,146 @@ export default function CertificateStatusList({ students, templates }: Props) {
     setIsDetailsModalOpen(true);
   };
 
+  const getStatusLabel = (status: string | null) => {
+    switch (status) {
+      case "pending":
+        return "قيد الانتظار";
+      case "in-progress":
+        return "قيد المعالجة";
+      case "completed":
+        return "مكتمل";
+      default:
+        return "الحالة";
+    }
+  };
+
   return (
     <div className="w-full">
       {/* ── Search & Filter Bar ── */}
       <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
-        <div className="relative flex-1 w-full group">
+        {/* Filters on Left */}
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto order-2 md:order-1">
+          {/* Status Filter (Existing Dropdown moved and updated) */}
+          <div className="relative group w-full md:w-auto">
+            <button
+              type="button"
+              className="bg-[#ffb755] text-[#1a3b5c] rounded-full px-8 py-4 flex items-center justify-center gap-3 text-xl font-bold shadow-[0_4px_12px_rgba(255,183,85,0.2)] hover:bg-[#ffb755]/90 transition-all w-full min-w-[180px]"
+            >
+              <span>{getStatusLabel(filterStatus)}</span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="w-5 h-5"
+              >
+                <path
+                  d="M19 9l-7 7-7-7"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            <div className="absolute left-0 mt-3 w-64 bg-white rounded-[30px] shadow-2xl border border-[#e5e7eb] py-4 hidden group-hover:block z-[100]">
+              <p className="text-right px-6 py-2 text-sm font-bold text-[#1a3b5c]/40 uppercase tracking-wider">
+                تصفية حسب الحالة
+              </p>
+              <button
+                type="button"
+                onClick={() => setFilterStatus(null)}
+                className="w-full text-right px-6 py-3 hover:bg-[#ffb755]/10 text-[#1a3b5c] font-bold transition-colors"
+              >
+                الكل
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus("pending")}
+                className="w-full text-right px-6 py-3 hover:bg-[#ffb755]/10 text-[#1a3b5c] font-bold transition-colors"
+              >
+                قيد الانتظار
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus("in-progress")}
+                className="w-full text-right px-6 py-3 hover:bg-[#ffb755]/10 text-[#1a3b5c] font-bold transition-colors"
+              >
+                قيد المعالجة
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus("completed")}
+                className="w-full text-right px-6 py-3 hover:bg-[#ffb755]/10 text-[#1a3b5c] font-bold transition-colors"
+              >
+                مكتمل
+              </button>
+            </div>
+          </div>
+
+          {/* New Major Filter */}
+          <div className="relative group w-full md:w-auto">
+            <button
+              type="button"
+              className="bg-[#ffb755] text-[#1a3b5c] rounded-full px-8 py-4 flex items-center justify-center gap-3 text-xl font-bold shadow-[0_4px_12px_rgba(255,183,85,0.2)] hover:bg-[#ffb755]/90 transition-all w-full min-w-[180px]"
+            >
+              <span className="truncate max-w-[150px]">{filterMajor || "التخصص"}</span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="w-5 h-5"
+              >
+                <path
+                  d="M19 9l-7 7-7-7"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            <div className="absolute left-0 mt-3 w-72 bg-white rounded-[30px] shadow-2xl border border-[#e5e7eb] py-4 hidden group-hover:block z-[100]">
+              <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 mb-2">
+                <p className="text-sm font-bold text-[#1a3b5c]/40 uppercase tracking-wider">
+                  التخصصات
+                </p>
+                <button
+                  onClick={() => setIsMajorsModalOpen(true)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-[#1a3b5c]/60 hover:text-[#1a3b5c]"
+                  title="إدارة التخصصات"
+                >
+                  <Settings2 className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="max-h-[300px] overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => setFilterMajor(null)}
+                  className="w-full text-right px-6 py-3 hover:bg-[#ffb755]/10 text-[#1a3b5c] font-bold transition-colors"
+                >
+                  الكل
+                </button>
+                {availableMajors.map((major) => (
+                  <button
+                    key={major}
+                    type="button"
+                    onClick={() => setFilterMajor(major)}
+                    className="w-full text-right px-6 py-3 hover:bg-[#ffb755]/10 text-[#1a3b5c] font-bold transition-colors"
+                  >
+                    {major}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search Bar on Right */}
+        <div className="relative flex-1 w-full group order-1 md:order-2">
           <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1a3b5c]/40 w-6 h-6 transition-colors group-focus-within:text-[#ffb755]" />
           <input
             type="text"
@@ -72,54 +221,6 @@ export default function CertificateStatusList({ students, templates }: Props) {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white rounded-full py-5 pr-14 pl-6 text-xl font-bold text-[#1a3b5c] shadow-[0_4px_12px_rgba(0,0,0,0.05)] border-none focus:ring-2 focus:ring-[#ffb755] placeholder:text-[#1a3b5c]/40 transition-all"
           />
-        </div>
-
-        <div className="relative group w-full md:w-auto">
-          <button
-            type="button"
-            className="bg-[#ffb755] text-[#1a3b5c] rounded-full px-8 py-4 flex items-center justify-center gap-3 text-xl font-bold shadow-[0_4px_12px_rgba(255,183,85,0.2)] hover:bg-[#ffb755]/90 transition-all w-full"
-          >
-            <span>Filter</span>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="w-5 h-5"
-            >
-              <path
-                d="M19 9l-7 7-7-7"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-
-          {/* Simple Dropdown for Major Filter */}
-          <div className="absolute left-0 mt-3 w-72 bg-white rounded-[30px] shadow-2xl border border-[#e5e7eb] py-4 hidden group-hover:block z-[100]">
-            <p className="text-right px-6 py-2 text-sm font-bold text-[#1a3b5c]/40 uppercase tracking-wider">
-              تصفية حسب التخصص
-            </p>
-            <button
-              type="button"
-              onClick={() => setFilterMajor(null)}
-              className="w-full text-right px-6 py-3 hover:bg-[#ffb755]/10 text-[#1a3b5c] font-bold transition-colors"
-            >
-              الكل
-            </button>
-            {majors.map((major) => (
-              <button
-                key={major}
-                type="button"
-                onClick={() => setFilterMajor(major)}
-                className="w-full text-right px-6 py-3 hover:bg-[#ffb755]/10 text-[#1a3b5c] font-bold transition-colors"
-              >
-                {major}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -160,6 +261,18 @@ export default function CertificateStatusList({ students, templates }: Props) {
         onClose={() => setIsDetailsModalOpen(false)}
         student={selectedStudent}
       />
+      <ManageMajorsModal
+        isOpen={isMajorsModalOpen}
+        onClose={() => setIsMajorsModalOpen(false)}
+        onMajorsChange={(majors) => {
+          setAvailableMajors(majors);
+          // If the currently filtered major was deleted, reset filter
+          if (filterMajor && !majors.includes(filterMajor)) {
+            setFilterMajor(null);
+          }
+        }}
+      />
     </div>
   );
 }
+

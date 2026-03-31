@@ -103,7 +103,7 @@ export async function updateOwnProfileAction(
           userId: userId,
           studentCardNumber: studentCardNumber || null,
           phone: phone || null,
-          major: "",
+          major: null,
         },
       });
     }
@@ -129,6 +129,16 @@ export async function updateStudentDataAction(data: {
   const userId = session.user.id;
 
   try {
+    // Validate major if provided
+    if (data.major) {
+      const majorExists = await prisma.major.findUnique({
+        where: { name: data.major },
+      });
+      if (!majorExists) {
+        return { error: `التخصص "${data.major}" غير موجود في النظام` };
+      }
+    }
+
     await prisma.$transaction(async (tx) => {
       // Update User info
       if (data.nameAr || data.name) {
@@ -154,7 +164,7 @@ export async function updateStudentDataAction(data: {
           },
           create: {
             userId: userId,
-            major: data.major || "",
+            major: data.major || null,
             studentCardNumber: data.studentCardNumber || null,
             graduationYear: data.graduationYear || null,
           },

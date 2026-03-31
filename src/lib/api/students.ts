@@ -27,7 +27,9 @@ export async function getStudentsWithCertSteps(
   const users = await prisma.user.findMany({
     where: { role: "STUDENT", isApproved: true },
     include: {
-      studentProfile: true,
+      studentProfile: {
+        include: { majorRelation: true },
+      },
       graduationForm: true,
       certificateSteps: { orderBy: { order: "asc" } },
       documents: { orderBy: { createdAt: "desc" } },
@@ -39,7 +41,7 @@ export async function getStudentsWithCertSteps(
     id: u.id,
     name: u.name,
     nameAr: u.nameAr,
-    major: u.studentProfile?.major ?? null,
+    major: u.studentProfile?.majorRelation?.name ?? u.studentProfile?.major ?? null,
     phone: u.studentProfile?.phone ?? null,
     studentCardNumber: u.studentProfile?.studentCardNumber ?? null,
     graduationYear: u.studentProfile?.graduationYear ?? null,
@@ -72,7 +74,11 @@ export async function getStudentsWithCertSteps(
 export async function getStudents(): Promise<Student[]> {
   const users = await prisma.user.findMany({
     where: { role: "STUDENT" },
-    include: { studentProfile: true },
+    include: { 
+      studentProfile: {
+        include: { majorRelation: true }
+      } 
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -81,7 +87,7 @@ export async function getStudents(): Promise<Student[]> {
     name: u.name ?? "",
     email: u.email,
     academicId: u.academicId,
-    department: u.studentProfile?.major ?? "",
+    department: u.studentProfile?.majorRelation?.name ?? u.studentProfile?.major ?? "",
     status: u.isApproved ? ("active" as const) : ("suspended" as const),
     avatarUrl: u.image,
   }));
@@ -92,7 +98,11 @@ export async function getStudentById(
 ): Promise<StudentWithProfile | null> {
   const user = await prisma.user.findUnique({
     where: { id, role: "STUDENT" },
-    include: { studentProfile: true },
+    include: { 
+      studentProfile: {
+        include: { majorRelation: true }
+      } 
+    },
   });
   if (!user) return null;
 
@@ -109,7 +119,7 @@ export async function getStudentById(
     profile: user.studentProfile
       ? {
           studentCardNumber: user.studentProfile.studentCardNumber,
-          major: user.studentProfile.major,
+          major: user.studentProfile.majorRelation?.name ?? user.studentProfile.major,
           graduationYear: user.studentProfile.graduationYear,
           phone: user.studentProfile.phone,
         }
@@ -122,6 +132,17 @@ export async function createStudent(
 ): Promise<StudentWithProfile> {
   const { password, major, studentCardNumber, graduationYear, ...userData } =
     data;
+
+  // Validate major if provided
+  if (major) {
+    const majorExists = await prisma.major.findUnique({
+      where: { name: major },
+    });
+    if (!majorExists) {
+      throw new Error(`التخصص "${major}" غير موجود في النظام`);
+    }
+  }
+
   const bcrypt = await import("bcryptjs");
   const passwordHash = await bcrypt.hash(password, 12);
 
@@ -144,7 +165,7 @@ export async function createStudent(
       isApproved: false,
       studentProfile: {
         create: {
-          major: major ?? "",
+          major: major ?? null,
           studentCardNumber: studentCardNumber ?? null,
           graduationYear: graduationYear ?? null,
         },
@@ -157,7 +178,11 @@ export async function createStudent(
         })),
       },
     },
-    include: { studentProfile: true },
+    include: { 
+      studentProfile: {
+        include: { majorRelation: true }
+      } 
+    },
   });
 
   return {
@@ -173,7 +198,7 @@ export async function createStudent(
     profile: user.studentProfile
       ? {
           studentCardNumber: user.studentProfile.studentCardNumber,
-          major: user.studentProfile.major,
+          major: user.studentProfile.majorRelation?.name ?? user.studentProfile.major,
           graduationYear: user.studentProfile.graduationYear,
           phone: user.studentProfile.phone,
         }
@@ -186,6 +211,16 @@ export async function updateStudent(
   userData: UpdateStudentInput,
   profileData?: UpdateStudentProfileInput,
 ): Promise<StudentWithProfile | null> {
+  // Validate major if provided in profileData
+  if (profileData?.major) {
+    const majorExists = await prisma.major.findUnique({
+      where: { name: profileData.major },
+    });
+    if (!majorExists) {
+      throw new Error(`التخصص "${profileData.major}" غير موجود في النظام`);
+    }
+  }
+
   const user = await prisma.user.update({
     where: { id },
     data: {
@@ -201,7 +236,11 @@ export async function updateStudent(
           }
         : {}),
     },
-    include: { studentProfile: true },
+    include: { 
+      studentProfile: {
+        include: { majorRelation: true }
+      } 
+    },
   });
 
   return {
@@ -217,7 +256,7 @@ export async function updateStudent(
     profile: user.studentProfile
       ? {
           studentCardNumber: user.studentProfile.studentCardNumber,
-          major: user.studentProfile.major,
+          major: user.studentProfile.majorRelation?.name ?? user.studentProfile.major,
           graduationYear: user.studentProfile.graduationYear,
           phone: user.studentProfile.phone,
         }
@@ -238,7 +277,11 @@ export async function approveStudent(
 export async function getUnapprovedStudents(): Promise<Student[]> {
   const users = await prisma.user.findMany({
     where: { role: "STUDENT", isApproved: false },
-    include: { studentProfile: true },
+    include: { 
+      studentProfile: {
+        include: { majorRelation: true }
+      } 
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -247,7 +290,7 @@ export async function getUnapprovedStudents(): Promise<Student[]> {
     name: u.name ?? "",
     email: u.email,
     academicId: u.academicId,
-    department: u.studentProfile?.major ?? "",
+    department: u.studentProfile?.majorRelation?.name ?? u.studentProfile?.major ?? "",
     status: "suspended" as const,
     avatarUrl: u.image,
   }));
@@ -311,7 +354,7 @@ export async function getStudentsBasicInfo(): Promise<StudentBasicInfo[]> {
       nameAr: true,
       academicId: true,
       studentProfile: {
-        select: { major: true, graduationYear: true },
+        include: { majorRelation: true },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -322,7 +365,7 @@ export async function getStudentsBasicInfo(): Promise<StudentBasicInfo[]> {
     name: u.name,
     nameAr: u.nameAr,
     academicId: u.academicId,
-    major: u.studentProfile?.major ?? null,
+    major: u.studentProfile?.majorRelation?.name ?? u.studentProfile?.major ?? null,
     graduationYear: u.studentProfile?.graduationYear ?? null,
   }));
 }

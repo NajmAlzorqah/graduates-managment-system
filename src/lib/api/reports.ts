@@ -31,7 +31,9 @@ export async function getReports(
       ],
     },
     include: {
-      studentProfile: true,
+      studentProfile: {
+        include: { majorRelation: true },
+      },
       certificateSteps: { orderBy: { order: "asc" } },
     },
     orderBy: { createdAt: "desc" },
@@ -56,7 +58,7 @@ export async function getReports(
       name: u.name,
       email: u.email,
       academicId: u.academicId,
-      major: u.studentProfile?.major ?? null,
+      major: u.studentProfile?.majorRelation?.name ?? u.studentProfile?.major ?? null,
       graduationYear: u.studentProfile?.graduationYear ?? null,
       certificateStatus: statusLabel,
     };
@@ -71,10 +73,9 @@ export async function getReports(
 }
 
 export async function getReportFilters() {
-  const majors = await prisma.studentProfile.findMany({
-    where: { major: { not: null } },
-    distinct: ["major"],
-    select: { major: true },
+  const majors = await prisma.major.findMany({
+    orderBy: { name: "asc" },
+    select: { name: true },
   });
 
   const graduationYears = await prisma.studentProfile.findMany({
@@ -89,7 +90,7 @@ export async function getReportFilters() {
   });
 
   return {
-    majors: majors.map((m) => m.major as string),
+    majors: majors.map((m) => m.name),
     graduationYears: graduationYears.map((y) => y.graduationYear as number),
     certificateStatuses: [...steps.map((s) => s.label), "تمت المصادقة"],
   };
